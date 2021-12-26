@@ -337,6 +337,15 @@ struct String
         y[0][n_0] = -y[2][n_0]; // Left boundary
         y[end][n_0] = -y[end-2][n_0]; // b) Bridge boundary
 
+        // - boundary conditions (Saitis, // Eq. 4.18 and Eq. 4.20)
+        //   a) left boundary (frame) // 4.20
+        //y[0][n] = b_L1*y[0][n-1] + b_L2*y[1][n-1] + b_L3*y[2][n-1]
+        //    + b_L4*y[0][n-2] + b_LF*h->Fh[n-1]*h->hammer_mask[i];
+        //   b) right boundary (bridge) // Eq. 4.18
+        //int end = len_x_axis;
+        //y[end][n] = b_R1*y[end][n-1] + b_R2*y[end-1][n-1]
+        //    + b_R3*y[end-2][n-1] + b_R4*y[end][n-2] + b_RF*h->Fh[n-1]*h->hammer_mask[i];
+
         double current_sample = mean(this->y, 1, n_0, left_boundary, right_boundary); //y[left_boundary][n_0];
 
         // - the hammer displacement eta(n)
