@@ -1,0 +1,14 @@
+MidiDemo/
+
+.buildconfig
+FRUT/
+JUCE/
+
+OpenPiano/CMakeLists.txt
+OpenPiano/CMakeLists.txt.user
+OpenPiano/Builds/
+OpenPiano/JuceLibraryCode/
+
+OpenPianoCore/CMakeLists.txt.user
+OpenPianoCore/build-Debug/
+OpenPianoCore/build-Release/
