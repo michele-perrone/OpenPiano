@@ -14,7 +14,8 @@
 //==============================================================================
 /**
 */
-class OpenPianoAudioProcessorEditor  : public juce::AudioProcessorEditor
+
+class OpenPianoAudioProcessorEditor  : public juce::AudioProcessorEditor, public juce::MidiKeyboardState::Listener
 {
 public:
     OpenPianoAudioProcessorEditor (OpenPianoAudioProcessor&);
@@ -28,6 +29,17 @@ private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     OpenPianoAudioProcessor& audioProcessor;
+
+    juce::MidiKeyboardState keyboardState;
+    juce::MidiKeyboardComponent midiKeyboard;
+
+    juce::CriticalSection midiMonitorLock;
+    juce::Array<juce::MidiMessage> incomingMessages;
+    juce::MidiBuffer outgoingMessages;
+
+    void handleNoteOn (juce::MidiKeyboardState*, int midiChannel, int midiNoteNumber, float velocity) override;
+    void handleNoteOff (juce::MidiKeyboardState*, int midiChannel, int midiNoteNumber, float velocity) override;
+    void postMessageToList (const juce::MidiMessage& message, const juce::String& source);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OpenPianoAudioProcessorEditor)
 };

@@ -156,7 +156,7 @@ void OpenPianoAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     // the samples and the outer loop is handling the channels.
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
-    juce::MidiBuffer processedMidi;
+    keyboardState.processNextMidiBuffer (midiMessages, 0, buffer.getNumSamples(), true);
 
     for (const auto metadata : midiMessages)
     {
