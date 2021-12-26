@@ -9,7 +9,7 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "../../OpenPianoCore/string_hammer.h"
+#include "../../OpenPianoCore/piano.h"
 
 
 
@@ -60,48 +60,5 @@ private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OpenPianoAudioProcessor)
 
-    Hammer* hammer_C2;
-    String* string_C2;
-
-    Hammer* hammer_D2;
-    String* string_D2;
-
-    Hammer* hammer_E2;
-    String* string_E2;
-
-    Hammer* hammer_F2;
-    String* string_F2;
-
-    Hammer* hammer_G2;
-    String* string_G2;
-
-    Hammer* hammer_A2;
-    String* string_A2;
-
-    Hammer* hammer_B2;
-    String* string_B2;
-
-    Hammer* hammer_C3;
-    String* string_C3;
-
-    Hammer* hammer_D3;
-    String* string_D3;
-
-    Hammer* hammer_E3;
-    String* string_E3;
-
-    Hammer* hammer_F3;
-    String* string_F3;
-
-    Hammer* hammer_G3;
-    String* string_G3;
-
-    Hammer* hammer_A3;
-    String* string_A3;
-
-    Hammer* hammer_B3;
-    String* string_B3;
-
-    Hammer* hammer_C4;
-    String* string_C4;
+    Piano* piano;
 };

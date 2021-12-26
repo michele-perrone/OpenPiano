@@ -96,40 +96,8 @@ void OpenPianoAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
 
-    // Initialize the hammer with its physical parameters
-    hammer_C2 = new Hammer(sampleRate, 4.9e-03, 2.3, 1e-04, 4e08, 0.12, 0.05);
-    hammer_D2 = new Hammer(sampleRate, 4.9e-03, 2.3, 1e-04, 4e08, 0.12, 0.05);
-    hammer_E2 = new Hammer(sampleRate, 4.9e-03, 2.3, 1e-04, 4e08, 0.12, 0.05);
-    hammer_F2 = new Hammer(sampleRate, 4.9e-03, 2.3, 1e-04, 4e08, 0.12, 0.05);
-    hammer_G2 = new Hammer(sampleRate, 4.9e-03, 2.3, 1e-04, 4e08, 0.12, 0.05);
-    hammer_A2 = new Hammer(sampleRate, 4.9e-03, 2.3, 1e-04, 4e08, 0.12, 0.05);
-    hammer_B2 = new Hammer(sampleRate, 4.9e-03, 2.3, 1e-04, 4e08, 0.12, 0.05);
-    hammer_C3 = new Hammer(sampleRate, 4.9e-03, 2.3, 1e-04, 4e08, 0.12, 0.05);
-    hammer_D3 = new Hammer(sampleRate, 4.9e-03, 2.3, 1e-04, 4e08, 0.12, 0.05);
-    hammer_E3 = new Hammer(sampleRate, 4.9e-03, 2.3, 1e-04, 4e08, 0.12, 0.05);
-    hammer_F3 = new Hammer(sampleRate, 4.9e-03, 2.3, 1e-04, 4e08, 0.12, 0.05);
-    hammer_G3 = new Hammer(sampleRate, 4.9e-03, 2.3, 1e-04, 4e08, 0.12, 0.05);
-    hammer_A3 = new Hammer(sampleRate, 4.9e-03, 2.3, 1e-04, 4e08, 0.12, 0.05);
-    hammer_B3 = new Hammer(sampleRate, 4.9e-03, 2.3, 1e-04, 4e08, 0.12, 0.05);
-    hammer_C4 = new Hammer(sampleRate, 4.9e-03, 2.3, 1e-04, 4e08, 0.12, 0.05);
-
-
-    // Initialize the string with its physical parameters
-    string_C2 = new String(sampleRate, 65.41, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammer_C2);
-    string_D2 = new String(sampleRate, 73.42, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammer_D2);
-    string_E2 = new String(sampleRate, 82.41, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammer_E2);
-    string_F2 = new String(sampleRate, 87.31, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammer_F2);
-    string_G2 = new String(sampleRate, 98.00, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammer_G2);
-    string_A2 = new String(sampleRate, 110.00, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammer_A2);
-    string_B2 = new String(sampleRate, 123.47, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammer_B2);
-    string_C3 = new String(sampleRate, 130.81, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammer_C3);
-    string_D3 = new String(sampleRate, 146.83, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammer_D3);
-    string_E3 = new String(sampleRate, 164.81, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammer_E3);
-    string_F3 = new String(sampleRate, 174.61, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammer_F3);
-    string_G3 = new String(sampleRate, 196, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammer_G3);
-    string_A3 = new String(sampleRate, 220, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammer_A3);
-    string_B3 = new String(sampleRate, 246.94, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammer_B3);
-    string_C4 = new String(sampleRate, 261.63, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammer_C4);
+    // Initialize the piano
+    piano = new Piano(sampleRate);
 
 }
 
@@ -137,50 +105,7 @@ void OpenPianoAudioProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
-    delete hammer_C2;
-    delete string_C2;
-
-    delete hammer_D2;
-    delete string_D2;
-
-    delete hammer_E2;
-    delete string_E2;
-
-    delete hammer_F2;
-    delete string_F2;
-
-    delete hammer_G2;
-    delete string_G2;
-
-    delete hammer_A2;
-    delete string_A2;
-
-    delete hammer_B2;
-    delete string_B2;
-
-    delete hammer_C3;
-    delete string_C3;
-
-    delete hammer_D3;
-    delete string_D3;
-
-    delete hammer_E3;
-    delete string_E3;
-
-    delete hammer_F3;
-    delete string_F3;
-
-    delete hammer_G3;
-    delete string_G3;
-
-    delete hammer_A3;
-    delete string_A3;
-
-    delete hammer_B3;
-    delete string_B3;
-
-    delete hammer_C4;
-    delete string_C4;
+    delete piano;
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -242,49 +167,79 @@ void OpenPianoAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
             switch (message.getNoteNumber())
             {
             case 36:
-                string_C2->hit(message.getVelocity()/30.0);
+                piano->string_C2->hit(message.getVelocity()/30.0);
+                break;
+            case 37:
+                piano->string_C2s->hit(message.getVelocity()/30.0);
                 break;
             case 38:
-                string_D2->hit(message.getVelocity()/30.0);
+                piano->string_D2->hit(message.getVelocity()/30.0);
+                break;
+            case 39:
+                piano->string_D2s->hit(message.getVelocity()/30.0);
                 break;
             case 40:
-                string_E2->hit(message.getVelocity()/30.0);
+                piano->string_E2->hit(message.getVelocity()/30.0);
                 break;
             case 41:
-                string_F2->hit(message.getVelocity()/30.0);
+                piano->string_F2->hit(message.getVelocity()/30.0);
+                break;
+            case 42:
+                piano->string_F2s->hit(message.getVelocity()/30.0);
                 break;
             case 43:
-                string_G2->hit(message.getVelocity()/30.0);
+                piano->string_G2->hit(message.getVelocity()/30.0);
+                break;
+            case 44:
+                piano->string_G2s->hit(message.getVelocity()/30.0);
                 break;
             case 45:
-                string_A2->hit(message.getVelocity()/30.0);
+                piano->string_A2->hit(message.getVelocity()/30.0);
+                break;
+            case 46:
+                piano->string_A2s->hit(message.getVelocity()/30.0);
                 break;
             case 47:
-                string_B2->hit(message.getVelocity()/30.0);
+                piano->string_B2->hit(message.getVelocity()/30.0);
                 break;
             case 48:
-                string_C3->hit(message.getVelocity()/30.0);
+                piano->string_C3->hit(message.getVelocity()/30.0);
+                break;
+            case 49:
+                piano->string_C3s->hit(message.getVelocity()/30.0);
                 break;
             case 50:
-                string_D3->hit(message.getVelocity()/30.0);
+                piano->string_D3->hit(message.getVelocity()/30.0);
+                break;
+            case 51:
+                piano->string_D3s->hit(message.getVelocity()/30.0);
                 break;
             case 52:
-                string_E3->hit(message.getVelocity()/30.0);
+                piano->string_E3->hit(message.getVelocity()/30.0);
                 break;
             case 53:
-                string_F3->hit(message.getVelocity()/30.0);
+                piano->string_F3->hit(message.getVelocity()/30.0);
+                break;
+            case 54:
+                piano->string_F3s->hit(message.getVelocity()/30.0);
                 break;
             case 55:
-                string_G3->hit(message.getVelocity()/30.0);
+                piano->string_G3->hit(message.getVelocity()/30.0);
+                break;
+            case 56:
+                piano->string_G3s->hit(message.getVelocity()/30.0);
                 break;
             case 57:
-                string_A3->hit(message.getVelocity()/30.0);
+                piano->string_A3->hit(message.getVelocity()/30.0);
+                break;
+            case 58:
+                piano->string_A3s->hit(message.getVelocity()/30.0);
                 break;
             case 59:
-                string_B3->hit(message.getVelocity()/30.0);
+                piano->string_B3->hit(message.getVelocity()/30.0);
                 break;
             case 60:
-                string_C4->hit(message.getVelocity()/30.0);
+                piano->string_C4->hit(message.getVelocity()/30.0);
                 break;
             default:
                 break;
@@ -295,21 +250,8 @@ void OpenPianoAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     int numSamples = buffer.getNumSamples();
     for (int i = 0; i < numSamples; ++i)
     {
-        float currentSample = 250*(string_C2->get_next_sample()                                   
-                                   + string_D2->get_next_sample()
-                                   + string_E2->get_next_sample()
-                                   + string_F2->get_next_sample()
-                                   + string_G2->get_next_sample()
-                                   + string_A2->get_next_sample()
-                                   + string_B2->get_next_sample()
-                                   + string_C3->get_next_sample()
-                                   + string_D3->get_next_sample()
-                                   + string_E3->get_next_sample()
-                                   + string_F3->get_next_sample()
-                                   + string_G3->get_next_sample()
-                                   + string_A3->get_next_sample()
-                                   + string_B3->get_next_sample()
-                                   + string_C4->get_next_sample());
+        float gain = 250;
+        float currentSample = gain*piano->get_next_sample();
         for (int channel = 0; channel < totalNumOutputChannels; ++channel)
         {
             float* outputChannelData = buffer.getWritePointer (channel);

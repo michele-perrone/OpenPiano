@@ -10,6 +10,7 @@
       <FILE id="x9E6Zp" name="array_helpers.h" compile="0" resource="0" file="../OpenPianoCore/array_helpers.h"/>
       <FILE id="gumU4z" name="dr_wav.cpp" compile="1" resource="0" file="../OpenPianoCore/dr_wav.cpp"/>
       <FILE id="BGTk62" name="dr_wav.h" compile="0" resource="0" file="../OpenPianoCore/dr_wav.h"/>
+      <FILE id="dn67Hr" name="piano.h" compile="0" resource="0" file="../OpenPianoCore/piano.h"/>
       <FILE id="icLbit" name="string_hammer.h" compile="0" resource="0" file="../OpenPianoCore/string_hammer.h"/>
     </GROUP>
     <GROUP id="{56D4A909-677C-B26B-3FCB-E90596986A2C}" name="Source">
