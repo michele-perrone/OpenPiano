@@ -258,7 +258,7 @@ void OpenPianoAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     /*for (int i = 0; i < numSamples; ++i)
     {
         float gain = 250;
-        float currentSample = gain*piano->get_next_sample();
+        float currentSample = piano->get_next_sample(gain);
         for (int channel = 0; channel < totalNumOutputChannels; ++channel)
         {
             float* outputChannelData = buffer.getWritePointer (channel);

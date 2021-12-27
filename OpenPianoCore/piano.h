@@ -119,9 +119,9 @@ struct Piano
         string_B3 = new String(sample_rate, 246.94, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammer_B3);
         string_C4 = new String(sample_rate, 261.63, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammer_C4);
     }
-    double get_next_sample()
+    float get_next_sample(float gain)
     {
-        return string_C2->get_next_sample()
+        return (string_C2->get_next_sample()
                 + string_C2s->get_next_sample()
                 + string_D2->get_next_sample()
                 + string_D2s->get_next_sample()
@@ -145,7 +145,14 @@ struct Piano
                 + string_A3->get_next_sample()
                 + string_A3s->get_next_sample()
                 + string_B3->get_next_sample()
-                + string_C4->get_next_sample();
+                + string_C4->get_next_sample())*gain;
+    }
+    void get_next_block(float* buffer, size_t length, float gain)
+    {
+        for(size_t i = 0; i < length; i++)
+        {
+            buffer[i] = get_next_sample(gain);
+        }
     }
     void get_next_sample_octave_2(float* sample, float gain)
     {
