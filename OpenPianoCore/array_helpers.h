@@ -25,6 +25,7 @@ double* hanning(int length);
 double mean(double **array, int dim, int idx, int start, int stop);
 void print1D(double* array, int size);
 void normalize(double* array, int size);
+void sum(double* array_1, double* array_2, int size);
 
 #ifdef __cplusplus
 }

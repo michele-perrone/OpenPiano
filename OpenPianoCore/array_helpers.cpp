@@ -86,3 +86,10 @@ void print1D(double* array, int size)
     }
 }
 
+void sum(double* array_1, double* array_2, int size)
+{
+    for (int i = 0; i < size; i++)
+    {
+        array_1[i] += array_2[i];
+    }
+}
