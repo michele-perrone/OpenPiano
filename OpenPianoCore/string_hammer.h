@@ -162,6 +162,10 @@ struct String
     // Parameters for spatio-temporal simulation scheme
     int buffer_size; // 4 samples is the absolute minimum
     uint64_t n; // Sample counter for the string simulation
+    uint8_t n_0;
+    uint8_t n_1;
+    uint8_t n_2;
+    uint8_t n_3;
 
     // Parameters for the calculation of the sound
     int N_space_samples; // Must be even in order to be centered around something
@@ -248,8 +252,21 @@ struct String
         this->b_LF = (powf(Ts,2)/rho)/(1+b1*Ts+zeta_l*lambda);
 
         // Parameters for the spatio-temporal simulation scheme
-        this->n = -1; // This counter will be incremented at every temporal step
-        this->buffer_size = 4; // 4 samples is the absolute minimum, and should be kept this way
+        //this->n = -1; // [CONSIDER DEPRECATING] This counter will be incremented at every temporal step
+        this->buffer_size = 4; // This is the length of the circular temporal buffer.
+                               // The finite-difference equation needs 3 previous time steps
+                               // in order to calculate the current time step.
+                               // Therefore, the minimum length of the buffer is 4.
+        // The indices below will be updated at each time step.
+        // In order to simulate a circular buffer, they will be
+        // incremented and and only the two right-most bits will be
+        // kept. This eliminates the need of a global counter and
+        // should be more efficient than computing each the division
+        // remainder between the counter and the buffer size.
+        this->n_0 = 3; // Current time instant n
+        this->n_1 = 2; // Previous time instant n-1
+        this->n_2 = 1; // Previous time instant n-2
+        this->n_3 = 0; // Previous time instant n-3
 
         // Array definition
         this->y = zeros2D(len_x_axis+2, buffer_size);
@@ -276,7 +293,10 @@ struct String
         // Initial conditions: compute the displacement for the first three time samples
 
         // Time instant n=0
-        n++;
+        n_0 = (n_0+1)&0x3;
+        n_1 = (n_1+1)&0x3;
+        n_2 = (n_2+1)&0x3;
+        n_3 = (n_3+1)&0x3;
 
         /******************************* AHEM! *********************************
          * Resetting the entire string displacement to zero each time it's hit
@@ -284,41 +304,46 @@ struct String
          * if I don't do it the second time I hit string, everything EXPLODES */
         for(int i = 0; i < len_x_axis; i++)
         {
-            y[i][n%buffer_size] = 0.0f; // Eq. 14
+            y[i][n_0] = 0.0f; // Eq. 14
         }
-        h->eta[n%buffer_size] = 0.0f;
-        h->Fh[n%buffer_size] = 0.0f;
+        h->eta[n_0] = 0.0f;
+        h->Fh[n_0] = 0.0f;
 
         // Time instant n=1
-        n++;
+        n_0 = (n_0+1)&0x3;
+        n_1 = (n_1+1)&0x3;
+        n_2 = (n_2+1)&0x3;
+        n_3 = (n_3+1)&0x3;
+
         for (int i = 2; i < len_x_axis-3; i++)
         {
-            y[i][n%buffer_size] = (y[i-1][(n-1)%buffer_size] + y[i+1][(n-1)%buffer_size])*0.5f;
+            y[i][n_0] = (y[i-1][n_1] + y[i+1][n_1])*0.5f;
         }
-        h->eta[n%buffer_size] = V_h0 * Ts; // Eq. 15
-        h->Fh[n%buffer_size] = h->K*powf((h->eta[n%buffer_size] - y[h->Xs_contact][n%buffer_size]), h->p); // Eq. 17
+        h->eta[n_0] = V_h0 * Ts; // Eq. 15
+        h->Fh[n_0] = h->K*powf((h->eta[n_0] - y[h->Xs_contact][n_0]), h->p); // Eq. 17
 
         // Time instant n=2
-        n++;
+        n_0 = (n_0+1)&0x3;
+        n_1 = (n_1+1)&0x3;
+        n_2 = (n_2+1)&0x3;
+        n_3 = (n_3+1)&0x3;
+
         for (int i = 2; i < len_x_axis-3; i++)
         {
-            y[i][n%buffer_size] = y[i-1][(n-1)%buffer_size]
-                    + y[i+1][(n-1)%buffer_size] -y[i][(n-2)%buffer_size]
-                    + (powf(Ts,2.0f)*N*h->Fh[n%buffer_size]*h->hammer_mask[i])/h->Mh; // Eq. 18
+            y[i][n_0] = y[i-1][n_1]
+                    + y[i+1][n_1] -y[i][n_2]
+                    + (powf(Ts,2.0f)*N*h->Fh[n_0]*h->hammer_mask[i])/h->Mh; // Eq. 18
         }
-        h->eta[n%buffer_size] = h->d1*h->eta[(n-1)%buffer_size] + h->d2*h->eta[(n-2)%buffer_size] - (powf(Ts,2.0f)*h->Fh[(n-1)%buffer_size])/h->Mh; // Eq. 19
-        h->Fh[n%buffer_size] = h->K*(powf(h->eta[n%buffer_size] - y[h->Xs_contact][n%buffer_size], h->p)); // Eq. 20
+        h->eta[n_0] = h->d1*h->eta[n_1] + h->d2*h->eta[n_2] - (powf(Ts,2.0f)*h->Fh[n_1])/h->Mh; // Eq. 19
+        h->Fh[n_0] = h->K*(powf(h->eta[n_0] - y[h->Xs_contact][n_0], h->p)); // Eq. 20
     }
     double get_next_sample()
     {
         // For n>=3, compute:
-        n++;
-
-        // Recalculate the indices
-        uint8_t n_0 = (n)%buffer_size;
-        uint8_t n_1 = (n-1)%buffer_size;
-        uint8_t n_2 = (n-2)%buffer_size;
-        uint8_t n_3 = (n-3)%buffer_size;
+        n_0 = (n_0+1)&0x3;
+        n_1 = (n_1+1)&0x3;
+        n_2 = (n_2+1)&0x3;
+        n_3 = (n_3+1)&0x3;
 
         // - the string displacement  y(i,n)
         //   (spatial sampling loop, Eq. 10)
