@@ -190,7 +190,6 @@ struct String
 
         // Calculate the remaining physical parameters
         this->Ms = this->rho*this->L;
-        this->rho = this->Ms/this->L;
         this->Te = this->rho*powf(this->L,2)*4*powf(this->f0,2);
         this->c = sqrt(this->Te/this->rho);
         this->r_gyr = this->S/2;
