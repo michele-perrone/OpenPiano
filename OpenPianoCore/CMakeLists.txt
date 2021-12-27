@@ -18,3 +18,6 @@ add_executable(OpenPianoCore
 IF (NOT WIN32)
   target_link_libraries(OpenPianoCore m)
 ENDIF()
+
+find_package (Threads REQUIRED)
+target_link_libraries(OpenPianoCore Threads::Threads)

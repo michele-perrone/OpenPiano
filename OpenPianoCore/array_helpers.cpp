@@ -1,8 +1,8 @@
 #include "array_helpers.h"
 
-void normalize(double* array, int size)
+void normalize(float* array, int size)
 {
-    double max = 0.0;
+    float max = 0.0;
     for (int n = 0; n < size; n++)
     {
         if(array[n] > max)
@@ -86,10 +86,10 @@ void print1D(double* array, int size)
     }
 }
 
-void sum(double* array_1, double* array_2, int size)
+void sum(float* dest, float* array_1, float* array_2, int size)
 {
     for (int i = 0; i < size; i++)
     {
-        array_1[i] += array_2[i];
+        dest[i] = array_1[i] + array_2[i];
     }
 }

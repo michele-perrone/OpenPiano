@@ -17,7 +17,7 @@ OpenPianoAudioProcessor::OpenPianoAudioProcessor()
                       #if ! JucePlugin_IsSynth
                        .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
                       #endif
-                       .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
+                       .withOutput ("Output", juce::AudioChannelSet::mono(), true)
                      #endif
                        )
 #endif
@@ -96,9 +96,10 @@ void OpenPianoAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
 
-    // Initialize the piano
+    // Initialize the piano and the output buffer
     piano = new Piano(sampleRate);
-
+    outputBuffer_oct_2 = (float*)malloc(samplesPerBlock*sizeof (float));
+    outputBuffer_oct_3 = (float*)malloc(samplesPerBlock*sizeof (float));
 }
 
 void OpenPianoAudioProcessor::releaseResources()
@@ -106,6 +107,8 @@ void OpenPianoAudioProcessor::releaseResources()
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
     delete piano;
+    free(outputBuffer_oct_2);
+    free(outputBuffer_oct_3);
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -248,7 +251,11 @@ void OpenPianoAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     }
 
     int numSamples = buffer.getNumSamples();
-    for (int i = 0; i < numSamples; ++i)
+    float* outputChannelData = buffer.getWritePointer (0);
+    float gain = 200;
+    piano->get_next_block_multithreaded(outputChannelData, outputBuffer_oct_2, outputBuffer_oct_3, numSamples, gain);
+
+    /*for (int i = 0; i < numSamples; ++i)
     {
         float gain = 250;
         float currentSample = gain*piano->get_next_sample();
@@ -257,7 +264,7 @@ void OpenPianoAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
             float* outputChannelData = buffer.getWritePointer (channel);
             outputChannelData[i] = currentSample;
         }
-    }
+    }*/
 }
 
 //==============================================================================

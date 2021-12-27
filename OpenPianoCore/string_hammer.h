@@ -384,7 +384,7 @@ struct String
 
         return current_sample;
     }
-    static drwav_uint64 save_to_wav(char* filename, double* sound, uint64_t duration_samples, bool normalize_output, bool destroy)
+    static drwav_uint64 save_to_wav(char* filename, float* sound, uint64_t duration_samples, bool normalize_output, bool destroy)
     {
         if(normalize_output)
         {
@@ -397,7 +397,7 @@ struct String
         format.format = DR_WAVE_FORMAT_IEEE_FLOAT; // <-- Any of the DR_WAVE_FORMAT_* codes.
         format.channels = 1;
         format.sampleRate = 48000;
-        format.bitsPerSample = sizeof (double)*8;
+        format.bitsPerSample = sizeof (float)*8;
         drwav_init_file_write(&wav, filename, &format, NULL);
         drwav_uint64 framesWritten = drwav_write_pcm_frames(&wav, duration_samples, sound);
         drwav_uninit(&wav);
