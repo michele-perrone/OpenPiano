@@ -33,13 +33,8 @@ private:
     juce::MidiKeyboardState keyboardState;
     juce::MidiKeyboardComponent midiKeyboard;
 
-    juce::CriticalSection midiMonitorLock;
-    juce::Array<juce::MidiMessage> incomingMessages;
-    juce::MidiBuffer outgoingMessages;
-
     void handleNoteOn (juce::MidiKeyboardState*, int midiChannel, int midiNoteNumber, float velocity) override;
     void handleNoteOff (juce::MidiKeyboardState*, int midiChannel, int midiNoteNumber, float velocity) override;
-    void postMessageToList (const juce::MidiMessage& message, const juce::String& source);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OpenPianoAudioProcessorEditor)
 };
