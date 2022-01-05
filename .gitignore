@@ -10,3 +10,5 @@ OpenPianoJUCE/JuceLibraryCode/
 OpenPianoCore/CMakeLists.txt.user
 OpenPianoCore/build-Debug/
 OpenPianoCore/build-Release/
+
+README.md.backup
