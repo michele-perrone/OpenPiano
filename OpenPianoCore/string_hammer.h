@@ -290,63 +290,44 @@ struct String
     }
     void hit(double V_h0)
     {
-        // Initial conditions: compute the displacement for the first three time samples
+        // Hitting the string means:
+        // 1. Re-initializing the previous hammer position to zero
+        // 2. Setting the current hammer position according to the hit velocity,
+        //    which is the physical equivalente of striking the moving string
+        // 3. Calculating the current force based on the current hammer position
 
-        // Time instant n=0
-        n_0 = (n_0+1)&0x3;
-        n_1 = (n_1+1)&0x3;
-        n_2 = (n_2+1)&0x3;
-        n_3 = (n_3+1)&0x3;
+        // A small trick: decrement the buffer indices by one unit.
+        // This way, we don't have to calculate the string displacement inside this method,
+        // which would be pointless, since we don't return samples from here.
+        n_3 = (n_3-1)&0x3;
+        n_2 = (n_2-1)&0x3;
+        n_1 = (n_1-1)&0x3;
+        n_0 = (n_0-1)&0x3;
 
-        /******************************* AHEM! *********************************
-         * Resetting the entire string displacement to zero each time it's hit
-         * by the hammer does not sound intuitively right! The problem is,
-         * if I don't do it the second time I hit string, everything EXPLODES */
-        for(int i = 0; i < len_x_axis; i++)
-        {
-            y[i][n_0] = 0.0f; // Eq. 14
-        }
-        h->eta[n_0] = 0.0f;
-        h->Fh[n_0] = 0.0f;
+        // Since we've just decremented the indices, the n_0 below will also correspond
+        // to the n_0 seen by get_next_sample() when it will be computing the string displacement
+        h->eta[n_3] = 0;
+        h->eta[n_2] = 0;
+        h->eta[n_1] = 0;
+        h->eta[n_0] = V_h0 * Ts;
 
-        // Time instant n=1
-        n_0 = (n_0+1)&0x3;
-        n_1 = (n_1+1)&0x3;
-        n_2 = (n_2+1)&0x3;
-        n_3 = (n_3+1)&0x3;
-
-        for (int i = 2; i < len_x_axis-3; i++)
-        {
-            y[i][n_0] = (y[i-1][n_1] + y[i+1][n_1])*0.5f;
-        }
-        h->eta[n_0] = V_h0 * Ts; // Eq. 15
-        h->Fh[n_0] = h->K*powf((h->eta[n_0] - y[h->Xs_contact][n_0]), h->p); // Eq. 17
-
-        // Time instant n=2
-        n_0 = (n_0+1)&0x3;
-        n_1 = (n_1+1)&0x3;
-        n_2 = (n_2+1)&0x3;
-        n_3 = (n_3+1)&0x3;
-
-        for (int i = 2; i < len_x_axis-3; i++)
-        {
-            y[i][n_0] = y[i-1][n_1]
-                    + y[i+1][n_1] -y[i][n_2]
-                    + (powf(Ts,2.0f)*N*h->Fh[n_0]*h->hammer_mask[i])/h->Mh; // Eq. 18
-        }
-        h->eta[n_0] = h->d1*h->eta[n_1] + h->d2*h->eta[n_2] - (powf(Ts,2.0f)*h->Fh[n_1])/h->Mh; // Eq. 19
-        h->Fh[n_0] = h->K*(powf(h->eta[n_0] - y[h->Xs_contact][n_0], h->p)); // Eq. 20
+        if (h->eta[n_0] < y[h->Xs_contact][n_0]) // (Chaigne, Eq. 21)
+            h->Fh[n_0] = 0.0f; // Hammer not in contact with string -> force is 0
+        else
+            h->Fh[n_0] = h->K*powf(h->eta[n_0]-y[h->Xs_contact][n_0], h->p); // (Chaigne, Eq. 20)
     }
     double get_next_sample()
     {
-        // For n>=3, compute:
-        n_0 = (n_0+1)&0x3;
-        n_1 = (n_1+1)&0x3;
-        n_2 = (n_2+1)&0x3;
-        n_3 = (n_3+1)&0x3;
+        // Compute:
 
-        // - the string displacement  y(i,n)
-        //   (spatial sampling loop, Eq. 10)
+        // 1. The new buffer indices
+        n_3 = (n_3+1)&0x3; // Past time instant     n-3
+        n_2 = (n_2+1)&0x3; // Past time instant     n-2
+        n_1 = (n_1+1)&0x3; // Past time instant     n-1
+        n_0 = (n_0+1)&0x3; // Current time instant  n
+
+        // 2. The string displacement  y(i,n)
+        //   (spatial sampling loop, Chaigne, Eq. 10)
         for (int i = 2; i< len_x_axis-3; i++)
         {
             y[i][n_0] = a1*y[i][n_1] + a2*y[i][n_2]
@@ -356,31 +337,40 @@ struct String
                     + (powf(Ts,2.0f)*N*h->Fh[n_1]*h->hammer_mask[i])/Ms;
         }
 
-        // - boundary conditions (Chaigne, % Eq. 23)
+        // 3. (Simplified) Boundary conditions with perfect reflection (Chaigne, Eq. 23)
         int end = len_x_axis+1;
-        y[0][n_0] = -y[2][n_0]; // Left boundary
+        y[0][n_0] = -y[2][n_0]; // a) Left boundary
         y[end][n_0] = -y[end-2][n_0]; // b) Bridge boundary
 
-        // - boundary conditions (Saitis, // Eq. 4.18 and Eq. 4.20)
+        // 3. Boundary conditions with agraffe and bridge impedances (Saitis, Eq. 4.18 and Eq. 4.20)
         //   a) left boundary (frame) // 4.20
         //y[0][n] = b_L1*y[0][n-1] + b_L2*y[1][n-1] + b_L3*y[2][n-1]
         //    + b_L4*y[0][n-2] + b_LF*h->Fh[n-1]*h->hammer_mask[i];
         //   b) right boundary (bridge) // Eq. 4.18
         //int end = len_x_axis;
         //y[end][n] = b_R1*y[end][n-1] + b_R2*y[end-1][n-1]
-        //    + b_R3*y[end-2][n-1] + b_R4*y[end][n-2] + b_RF*h->Fh[n-1]*h->hammer_mask[i];
+        //    + b_R3*y[end-2][n-1] + b_R4*y[end][n-2] + b_RF*h->Fh[n-1]*h->hammer_mask[i];        
 
-        double current_sample = mean(this->y, 1, n_0, left_boundary, right_boundary); //y[left_boundary][n_0];
+        // 4. The hammer displacement by taking into account its felt parameters (Saitis, Eq. 4.21)
+        h->eta[n_0] = h->d1*h->eta[n_1] + h->d2*h->eta[n_2] + h->dF*h->Fh[n_1];
 
-        // - the hammer displacement eta(n)
-        h->eta[n_0] = h->d1*h->eta[n_1] + h->d2*h->eta[n_2] + h->dF*h->Fh[n_1]; // (Saitis, // 4.21)
+        // 4. (Simplified) The hammer displacement (Chaigne, Eq. 19)
+        //h->eta[n_0] = h->d1*h->eta[n_1] + h->d2*h->eta[n_2] - (powf(Ts,2.0f)*h->Fh[n_1])/h->Mh;
 
-        // - the hammer force Fh(n)
-        // if the condition in Eq. 21 is met, the force term is removed
-        if (h->eta[n_0] < y[h->Xs_contact][n_0]) // Eq. 21
+        // 5. The hammer force Fh(n)
+        // if the condition in (Chaigne, Eq. 21) is met, the force term is removed
+        if (h->eta[n_0] < y[h->Xs_contact][n_0]) // (Chaigne, Eq. 21)
             h->Fh[n_0] = 0.0f; // Hammer not in contact with string -> force is 0
         else
-            h->Fh[n_0] = h->K*powf(h->eta[n_0]-y[h->Xs_contact][n_0], h->p); // Eq. 20
+            h->Fh[n_0] = h->K*powf(h->eta[n_0]-y[h->Xs_contact][n_0], h->p); // (Chaigne, Eq. 20)
+
+        // 6. The current sound sample as the mean of a portion of string with specular position
+        //    with respect to the central striking point of the hammer
+        double current_sample = mean(this->y, 1, n_0, left_boundary, right_boundary);
+
+        // 6. The current sound sample as a single point on the string
+        //    This can be interesting for studying the different modes on different points of the string!
+        //double current_sample = y[left_boundary][n_0];
 
         return current_sample;
     }
