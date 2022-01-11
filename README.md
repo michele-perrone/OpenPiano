@@ -19,7 +19,7 @@ Open Piano is an attempt at recreating the characteristic sound of the piano wit
 
 ## Current state and road map
 Right now, Open Piano sounds like a strangely out of tune two-octave piano with no soundboard, only one string per note, and no pedal. And it eats too much CPU. What needs to be done:
-- Fix repeated hits of the string by the hammer, without resetting the entire string displacement (see [here](https://github.com/michele-perrone/OpenPiano/blob/main/OpenPianoCore/string_hammer.h#L307))
+- ~~Fix repeated hits of the string by the hammer, without resetting the entire string displacement (see [here](https://github.com/michele-perrone/OpenPiano/blob/c338f46ce50802265661e2898c5619e9c2654629/OpenPianoCore/string_hammer.h#L307))~~ [FIXED](https://github.com/michele-perrone/OpenPiano/commit/d0461f860075b43f8b4d246c1d99371dc0ab606f) 
 - Optimize the FD model to make it... usable. Take advantage of multithreading. In case FD shows itself to be too burdensome, consider the possibility of switching to modal analysis
 - Introduce multiple strings per note and simulate the double decay phenomenon
 - Introduce the pedal
