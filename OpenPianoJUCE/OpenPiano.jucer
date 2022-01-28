@@ -25,48 +25,48 @@
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
   <EXPORTFORMATS>
-    <CODEBLOCKS_LINUX targetFolder="Builds/CodeBlocksLinux">
-      <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" targetName="OpenPiano"/>
-        <CONFIGURATION isDebug="0" name="Release" targetName="OpenPiano"/>
-      </CONFIGURATIONS>
-      <MODULEPATHS>
-        <MODULEPATH id="juce_audio_basics" path="../../../../../usr/share/juce/modules"/>
-        <MODULEPATH id="juce_audio_devices" path="../../../../../usr/share/juce/modules"/>
-        <MODULEPATH id="juce_audio_formats" path="../../../../../usr/share/juce/modules"/>
-        <MODULEPATH id="juce_audio_plugin_client" path="../../../../../usr/share/juce/modules"/>
-        <MODULEPATH id="juce_audio_processors" path="../../../../../usr/share/juce/modules"/>
-        <MODULEPATH id="juce_audio_utils" path="../../../../../usr/share/juce/modules"/>
-        <MODULEPATH id="juce_core" path="../../../../../usr/share/juce/modules"/>
-        <MODULEPATH id="juce_data_structures" path="../../../../../usr/share/juce/modules"/>
-        <MODULEPATH id="juce_dsp" path="../../../../../usr/share/juce/modules"/>
-        <MODULEPATH id="juce_events" path="../../../../../usr/share/juce/modules"/>
-        <MODULEPATH id="juce_graphics" path="../../../../../usr/share/juce/modules"/>
-        <MODULEPATH id="juce_gui_basics" path="../../../../../usr/share/juce/modules"/>
-        <MODULEPATH id="juce_gui_extra" path="../../../../../usr/share/juce/modules"/>
-      </MODULEPATHS>
-    </CODEBLOCKS_LINUX>
     <LINUX_MAKE targetFolder="Builds/LinuxMakefile">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" targetName="OpenPiano"/>
-        <CONFIGURATION isDebug="0" name="Release" targetName="OpenPiano"/>
+        <CONFIGURATION isDebug="1" name="Debug"/>
+        <CONFIGURATION isDebug="0" name="Release"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
-        <MODULEPATH id="juce_audio_basics" path="../../../../../usr/share/juce/modules"/>
-        <MODULEPATH id="juce_audio_devices" path="../../../../../usr/share/juce/modules"/>
-        <MODULEPATH id="juce_audio_formats" path="../../../../../usr/share/juce/modules"/>
-        <MODULEPATH id="juce_audio_plugin_client" path="../../../../../usr/share/juce/modules"/>
-        <MODULEPATH id="juce_audio_processors" path="../../../../../usr/share/juce/modules"/>
-        <MODULEPATH id="juce_audio_utils" path="../../../../../usr/share/juce/modules"/>
-        <MODULEPATH id="juce_core" path="../../../../../usr/share/juce/modules"/>
-        <MODULEPATH id="juce_data_structures" path="../../../../../usr/share/juce/modules"/>
-        <MODULEPATH id="juce_dsp" path="../../../../../usr/share/juce/modules"/>
-        <MODULEPATH id="juce_events" path="../../../../../usr/share/juce/modules"/>
-        <MODULEPATH id="juce_graphics" path="../../../../../usr/share/juce/modules"/>
-        <MODULEPATH id="juce_gui_basics" path="../../../../../usr/share/juce/modules"/>
-        <MODULEPATH id="juce_gui_extra" path="../../../../../usr/share/juce/modules"/>
+        <MODULEPATH id="juce_audio_basics" path="../../juce"/>
+        <MODULEPATH id="juce_audio_devices" path="../../juce"/>
+        <MODULEPATH id="juce_audio_formats" path="../../juce"/>
+        <MODULEPATH id="juce_audio_plugin_client" path="../../juce"/>
+        <MODULEPATH id="juce_audio_processors" path="../../juce"/>
+        <MODULEPATH id="juce_audio_utils" path="../../juce"/>
+        <MODULEPATH id="juce_core" path="../../juce"/>
+        <MODULEPATH id="juce_data_structures" path="../../juce"/>
+        <MODULEPATH id="juce_dsp" path="../../juce"/>
+        <MODULEPATH id="juce_events" path="../../juce"/>
+        <MODULEPATH id="juce_graphics" path="../../juce"/>
+        <MODULEPATH id="juce_gui_basics" path="../../juce"/>
+        <MODULEPATH id="juce_gui_extra" path="../../juce"/>
       </MODULEPATHS>
     </LINUX_MAKE>
+    <CODEBLOCKS_LINUX targetFolder="Builds/CodeBlocksLinux">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug"/>
+        <CONFIGURATION isDebug="0" name="Release"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="../../juce"/>
+        <MODULEPATH id="juce_audio_devices" path="../../juce"/>
+        <MODULEPATH id="juce_audio_formats" path="../../juce"/>
+        <MODULEPATH id="juce_audio_plugin_client" path="../../juce"/>
+        <MODULEPATH id="juce_audio_processors" path="../../juce"/>
+        <MODULEPATH id="juce_audio_utils" path="../../juce"/>
+        <MODULEPATH id="juce_core" path="../../juce"/>
+        <MODULEPATH id="juce_data_structures" path="../../juce"/>
+        <MODULEPATH id="juce_dsp" path="../../juce"/>
+        <MODULEPATH id="juce_events" path="../../juce"/>
+        <MODULEPATH id="juce_graphics" path="../../juce"/>
+        <MODULEPATH id="juce_gui_basics" path="../../juce"/>
+        <MODULEPATH id="juce_gui_extra" path="../../juce"/>
+      </MODULEPATHS>
+    </CODEBLOCKS_LINUX>
   </EXPORTFORMATS>
   <MODULES>
     <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>

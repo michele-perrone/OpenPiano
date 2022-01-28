@@ -3,11 +3,11 @@ FRUT/
 JUCE/
 
 OpenPianoJUCE/CMakeLists.txt
-OpenPianoJUCE/CMakeLists.txt.user
+OpenPianoJUCE/CMakeLists.txt.user*
 OpenPianoJUCE/Builds/
 OpenPianoJUCE/JuceLibraryCode/
 
-OpenPianoCore/CMakeLists.txt.user
+OpenPianoCore/CMakeLists.txt.user*
 OpenPianoCore/build-Debug/
 OpenPianoCore/build-Release/
 
