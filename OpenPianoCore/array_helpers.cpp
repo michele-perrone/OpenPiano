@@ -78,6 +78,34 @@ double mean(double** array, int dim, int idx, int start, int stop)
     return sum/(stop-start);
 }
 
+double mean_abs(double** array, int dim, int idx, int start, int stop)
+{
+    // This function computes the mean of the absolute values of a 2D array
+    // over a single dimension.
+
+    // dim == 0 -> Compute the mean of the elements along one ROW
+    // dim == 1 -> Compute the mean of the elements along one COLUMN
+
+    double sum = 0;
+
+    if(dim == 0)
+    {
+        for (int i = start; i < stop; i++)
+        {
+            sum += fabs(array[idx][i]);
+        }
+    }
+    else if(dim == 1)
+    {
+        for (int i = start; i < stop; i++)
+        {
+            sum += fabs(array[i][idx]);
+        }
+    }
+
+    return sum/(stop-start);
+}
+
 void print1D(double* array, int size)
 {
     for (int i = 0; i < size; i++)
@@ -86,7 +114,7 @@ void print1D(double* array, int size)
     }
 }
 
-void sum(float* dest, float* array_1, float* array_2, int size)
+void mix(float* dest, float* array_1, float* array_2, int size)
 {
     for (int i = 0; i < size; i++)
     {

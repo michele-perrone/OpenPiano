@@ -23,9 +23,10 @@ double* zeros1D(int size);
 double** zeros2D(int rows, int columns);
 double* hanning(int length);
 double mean(double **array, int dim, int idx, int start, int stop);
+double mean_abs(double** array, int dim, int idx, int start, int stop);
 void print1D(double* array, int size);
 void normalize(float *array, int size);
-void sum(float *dest, float *array_1, float *array_2, int size);
+void mix(float *dest, float *array_1, float *array_2, int size);
 
 #ifdef __cplusplus
 }
