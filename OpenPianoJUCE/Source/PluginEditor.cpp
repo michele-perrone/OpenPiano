@@ -16,13 +16,14 @@ OpenPianoAudioProcessorEditor::OpenPianoAudioProcessorEditor (OpenPianoAudioProc
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
     midiKeyboard.setName ("MIDI Keyboard");
-    midiKeyboard.setAvailableRange(36, 60);
-    midiKeyboard.setKeyWidth(48);
+    midiKeyboard.setAvailableRange(FIRST_NOTE+MIDI_NOTE_OFFSET, LAST_NOTE+MIDI_NOTE_OFFSET);
+    midiKeyboard.setKeyWidth(24);
+    midiKeyboard.setOctaveForMiddleC(4);
     addAndMakeVisible (midiKeyboard);
 
     keyboardState.addListener (this);
 
-    setSize (720, 192);
+    setSize (24*N_WHITE_KEYS, 128); // 52 -> number of white keys
 }
 
 OpenPianoAudioProcessorEditor::~OpenPianoAudioProcessorEditor()

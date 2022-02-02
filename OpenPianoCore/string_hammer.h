@@ -123,8 +123,8 @@ struct String
 
     // Spatial sampling aliasing condition (number of maximum spatial steps)
     double gamma;
-    int N;
-    int len_x_axis;
+    uint32_t N;
+    uint32_t len_x_axis;
     double* x_axis;
 
     // FD parameters
@@ -165,13 +165,17 @@ struct String
     uint8_t n_0;
     uint8_t n_1;
     uint8_t n_2;
-    uint8_t n_3;
+    uint8_t n_3;    
 
     // Parameters for the calculation of the sound
     int N_space_samples; // Must be even in order to be centered around something
     int Xs_sound;
     int left_boundary;
-    int right_boundary;
+    int right_boundary;       
+
+    // These are used for optimization
+    bool is_active; // Whether the string displacement is negligible
+    uint64_t is_active_check_ctr; // Counter for triggering the "check_if_active()" function
 
     // Methods
     String(int Fs, double f0, double L, double rho, double S, double E, double b1, double b2, Hammer * h)
@@ -203,11 +207,6 @@ struct String
         this->gamma = Fs/(2*this->f0); // Eq. 12
         this->N = floor( sqrt((-1+sqrt(1+16*eps*powf(gamma,2)))/(8*eps)) ); // Eq. 11
         this->len_x_axis = N;
-        this->x_axis = zeros1D(N);
-        for(int i = 1; i<len_x_axis; i++)
-        {
-            x_axis[i] = x_axis[i-1]+(this->L/this->N);
-        }
 
         // Calculate the contact points on the string that are hit by the hammer
         this->h->Xs = this->L/this->N;
@@ -274,22 +273,51 @@ struct String
         this->h->Fh = zeros1D(buffer_size); // Force imparted by the hammer on the string over time
 
         // Parameters for extrapolating the sound of the string
-        this->N_space_samples = 13; // Must be even in order to be centered around something
+        this->N_space_samples = std::min((uint32_t)13, ((N-1)|0x1)); // Must be even in order to be centered around something
         this->Xs_sound = this->N - this->h->Xs_contact;
         this->left_boundary = Xs_sound-(N_space_samples-1)/2;
         this->right_boundary = Xs_sound+(N_space_samples-1)/2;
+
+        // The string will become active when hit by the hammer
+        this->is_active = false;
+        this->is_active_check_ctr = 0;
     }
     ~String()
     {
-        free(x_axis);
         for(int i = 0; i < len_x_axis+2; i++)
         {
             free(y[i]);
         }
         free(y);
     }
+    void check_if_active()
+    {
+        // Crude, but effective: this method computes the sum of the means of
+        // the absolute values of the string displacements. The sum is done
+        // over the four temporal steps contained in the buffer.
+        double displacement_abs = 0.0;
+
+        displacement_abs += mean_abs(this->y, 1, n_0, 2, len_x_axis-3);
+        displacement_abs += mean_abs(this->y, 1, n_1, 2, len_x_axis-3);
+        displacement_abs += mean_abs(this->y, 1, n_2, 2, len_x_axis-3);
+        displacement_abs += mean_abs(this->y, 1, n_3, 2, len_x_axis-3);
+
+        // The string is deemed "active" if the aforementioned sum is major
+        // than 1 micrometer. This number is purely empirical.
+        if(displacement_abs > 0.000001)
+        {
+            this->is_active = true;
+            return;
+        }
+
+        this->is_active = false;
+    }
     void hit(double V_h0)
     {
+        // "Activate" the string
+        this->is_active = true;
+        this->is_active_check_ctr = 0;
+
         // Hitting the string means:
         // 1. Re-initializing the previous hammer position to zero
         // 2. Setting the current hammer position according to the hit velocity,
@@ -318,6 +346,19 @@ struct String
     }
     double get_next_sample()
     {
+        // Save us a lot of time when the displacement is negligible.
+        // Do the check every 0x4000 samples (16384)
+        is_active_check_ctr++;
+        if(is_active_check_ctr > 0x4000)
+        {
+            is_active_check_ctr = 0;
+            check_if_active();
+        }
+        if(!is_active)
+        {
+            return 0;
+        }
+
         // Compute:
 
         // 1. The new buffer indices
@@ -334,7 +375,7 @@ struct String
                     + a3*(y[i+1][n_1] + y[i-1][n_1])
                     + a4*(y[i+2][n_1] + y[i-2][n_1])
                     + a5*(y[i+1][n_2] + y[i-1][n_2] + y[i][n_3])
-                    + (powf(Ts,2.0f)*N*h->Fh[n_1]*h->hammer_mask[i])/Ms;
+                    + (Ts*Ts*N*h->Fh[n_1]*h->hammer_mask[i])/Ms;
         }
 
         // 3. (Simplified) Boundary conditions with perfect reflection (Chaigne, Eq. 23)
@@ -373,6 +414,13 @@ struct String
         //double current_sample = y[left_boundary][n_0];
 
         return current_sample;
+    }
+    void get_next_block(float* buffer, size_t length, float gain)
+    {
+        for(size_t i = 0; i < length; i++)
+        {
+            buffer[i] = gain*this->get_next_sample();
+        }
     }
     static drwav_uint64 save_to_wav(char* filename, float* sound, uint64_t duration_samples, bool normalize_output, bool destroy)
     {
