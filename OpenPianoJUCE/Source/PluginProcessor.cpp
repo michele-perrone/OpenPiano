@@ -175,8 +175,8 @@ void OpenPianoAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     float* outputChannelData = buffer.getWritePointer (0);
     float gain = 150;
     //piano->get_next_block(outputChannelData, numSamples, gain);
-    piano->get_next_block_multithreaded(outputChannelData, numSamples, gain);
-    //piano->get_next_block_multithreaded_old(outputChannelData, outputBuffer_oct_2, outputBuffer_oct_3, numSamples, gain);
+    piano->get_next_block_threadpooled(outputChannelData, numSamples, gain);
+    //piano->get_next_block_multithreaded(outputChannelData, outputBuffer_oct_2, outputBuffer_oct_3, numSamples, gain);
 }
 
 //==============================================================================

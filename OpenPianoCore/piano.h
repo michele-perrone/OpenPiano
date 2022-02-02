@@ -73,7 +73,7 @@ struct Piano
         }
         free(buffers);
     }
-    void get_next_block_multithreaded(float* buffer, size_t block_length, float gain)
+    void get_next_block_threadpooled(float* buffer, size_t block_length, float gain)
     {
         for(int i = 0; i < N_STRINGS; i++)
         {
@@ -95,37 +95,18 @@ struct Piano
     }
     float get_next_sample(float gain)
     {
-        return (strings[C2]->get_next_sample()
-                + strings[C2s]->get_next_sample()
-                + strings[D2]->get_next_sample()
-                + strings[D2s]->get_next_sample()
-                + strings[E2]->get_next_sample()
-                + strings[F2]->get_next_sample()
-                + strings[F2s]->get_next_sample()
-                + strings[G2]->get_next_sample()
-                + strings[G2s]->get_next_sample()
-                + strings[A2]->get_next_sample()
-                + strings[A2s]->get_next_sample()
-                + strings[B2]->get_next_sample()
-                + strings[C3]->get_next_sample()
-                + strings[C3s]->get_next_sample()
-                + strings[D3]->get_next_sample()
-                + strings[D3s]->get_next_sample()
-                + strings[E3]->get_next_sample()
-                + strings[F3]->get_next_sample()
-                + strings[F3s]->get_next_sample()
-                + strings[G3]->get_next_sample()
-                + strings[G3s]->get_next_sample()
-                + strings[A3]->get_next_sample()
-                + strings[A3s]->get_next_sample()
-                + strings[B3]->get_next_sample()
-                + strings[C4]->get_next_sample())*gain;
+        float sample = 0;
+        for(int i = 0; i < N_STRINGS; i++)
+        {
+            sample += strings[i]->get_next_sample();
+        }
+        return gain*sample;
     }
     void get_next_block(float* buffer, size_t length, float gain)
     {
         for(size_t i = 0; i < length; i++)
         {
-            buffer[i] = get_next_sample(gain);
+            buffer[i] = this->get_next_sample(gain);
         }
     }
     void get_next_sample_octave_2(float* sample, float gain)
@@ -135,21 +116,6 @@ struct Piano
         {
             *sample += gain*strings[i]->get_next_sample();
         }
-
-        /*
-        *sample = (strings[C2]->get_next_sample()
-                + strings[C2s]->get_next_sample()
-                + strings[D2]->get_next_sample()
-                + strings[D2s]->get_next_sample()
-                + strings[E2]->get_next_sample()
-                + strings[F2]->get_next_sample()
-                + strings[F2s]->get_next_sample()
-                + strings[G2]->get_next_sample()
-                + strings[G2s]->get_next_sample()
-                + strings[A2]->get_next_sample()
-                + strings[A2s]->get_next_sample()
-                + strings[B2]->get_next_sample())*gain;
-*/
     }
     void get_next_sample_octave_3(float* sample, float gain)
     {
@@ -158,22 +124,6 @@ struct Piano
         {
             *sample += gain*strings[i]->get_next_sample();
         }
-
-        /*
-        *sample = (strings[C3]->get_next_sample()
-                + strings[C3s]->get_next_sample()
-                + strings[D3]->get_next_sample()
-                + strings[D3s]->get_next_sample()
-                + strings[E3]->get_next_sample()
-                + strings[F3]->get_next_sample()
-                + strings[F3s]->get_next_sample()
-                + strings[G3]->get_next_sample()
-                + strings[G3s]->get_next_sample()
-                + strings[A3]->get_next_sample()
-                + strings[A3s]->get_next_sample()
-                + strings[B3]->get_next_sample()
-                + strings[C4]->get_next_sample())*gain;
-                */
     }
     void get_next_block_octave_2(float* buffer, size_t length, float gain)
     {
@@ -189,10 +139,22 @@ struct Piano
             get_next_sample_octave_3(&buffer[i], gain);
         }
     }
-    void get_next_block_multithreaded_old(float* buffer_mix, float* buffer_oct_2, float* buffer_oct_3, size_t length, float gain)
+    void get_next_block_multithreaded(float* buffer_mix, float* buffer_oct_2, float* buffer_oct_3, size_t length, float gain)
     {
-        std::thread thr_oct_2 (&Piano::get_next_block_octave_2, this, buffer_oct_2, length, gain);
-        std::thread thr_oct_3 (&Piano::get_next_block_octave_3, this, buffer_oct_3, length, gain);
+        std::thread thr_oct_2 ([=]
+        {
+            for(size_t i = 0; i < length; i++)
+            {
+                get_next_sample_octave_2(&buffer_oct_2[i], gain);
+            }
+        });
+        std::thread thr_oct_3 ([=]
+        {
+            for(size_t i = 0; i < length; i++)
+            {
+                get_next_sample_octave_3(&buffer_oct_3[i], gain);
+            }
+        });
 
         thr_oct_2.join();
         thr_oct_3.join();

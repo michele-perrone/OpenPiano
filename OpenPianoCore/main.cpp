@@ -28,11 +28,11 @@ int main()
     // The typical velocity range for a piano is between 1 m/s and 6 m/s
     auto test_start = std::chrono::steady_clock::now();
     piano.strings[C2]->hit(2.5);
-    piano.get_next_block_multithreaded_old(&sound[0], &sound_oct_2[0], &sound_oct_3[0], 2*Fs, 1);
+    piano.get_next_block_multithreaded(&sound[0], &sound_oct_2[0], &sound_oct_3[0], 2*Fs, 1);
 
     // Hit it again. HARDER!!!!
     piano.strings[C2]->hit(5.5);
-    piano.get_next_block_multithreaded_old(&sound[2*Fs], &sound_oct_2[2*Fs], &sound_oct_3[2*Fs], duration_samples-2*Fs, 1);
+    piano.get_next_block_multithreaded(&sound[2*Fs], &sound_oct_2[2*Fs], &sound_oct_3[2*Fs], duration_samples-2*Fs, 1);
     auto test_end = std::chrono::steady_clock::now();
     uint64_t test_get_next_block_multithreaded = std::chrono::duration_cast<std::chrono::milliseconds>(test_end-test_start).count();
 
@@ -50,7 +50,7 @@ int main()
     piano.strings[C2]->hit(2.5);
     for(uint64_t n = 0; n < n_blocks; n++)
     {
-        piano.get_next_block_multithreaded_old(&sound[n*block_length], &sound_oct_2[n*block_length], &sound_oct_3[n*block_length], block_length, 1);
+        piano.get_next_block_multithreaded(&sound[n*block_length], &sound_oct_2[n*block_length], &sound_oct_3[n*block_length], block_length, 1);
     }
     test_end = std::chrono::steady_clock::now();
     uint64_t test_2_get_next_block_multithreaded = std::chrono::duration_cast<std::chrono::milliseconds>(test_end-test_start).count();
@@ -67,7 +67,7 @@ int main()
     piano.strings[C2]->hit(2.5);
     for(uint64_t n = 0; n < n_blocks; n++)
     {
-        piano.get_next_block_multithreaded(&sound[n*block_length], block_length, 1);
+        piano.get_next_block_threadpooled(&sound[n*block_length], block_length, 1);
     }
     test_end = std::chrono::steady_clock::now();
     uint64_t test_3_get_next_block_multithreaded = std::chrono::duration_cast<std::chrono::milliseconds>(test_end-test_start).count();
