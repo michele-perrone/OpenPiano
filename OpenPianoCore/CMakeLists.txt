@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 
 project(OpenPianoCore LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(OpenPianoCore
@@ -13,6 +13,7 @@ add_executable(OpenPianoCore
     array_helpers.cpp
     string_hammer.h
     piano.h
+    thread_pool.h
     )
 
 IF (NOT WIN32)

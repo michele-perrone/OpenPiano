@@ -167,104 +167,16 @@ void OpenPianoAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
 
         if (message.isNoteOn())
         {
-            switch (message.getNoteNumber())
-            {
-            case 36:
-                piano->string_C2->hit(message.getVelocity()/30.0);
-                break;
-            case 37:
-                piano->string_C2s->hit(message.getVelocity()/30.0);
-                break;
-            case 38:
-                piano->string_D2->hit(message.getVelocity()/30.0);
-                break;
-            case 39:
-                piano->string_D2s->hit(message.getVelocity()/30.0);
-                break;
-            case 40:
-                piano->string_E2->hit(message.getVelocity()/30.0);
-                break;
-            case 41:
-                piano->string_F2->hit(message.getVelocity()/30.0);
-                break;
-            case 42:
-                piano->string_F2s->hit(message.getVelocity()/30.0);
-                break;
-            case 43:
-                piano->string_G2->hit(message.getVelocity()/30.0);
-                break;
-            case 44:
-                piano->string_G2s->hit(message.getVelocity()/30.0);
-                break;
-            case 45:
-                piano->string_A2->hit(message.getVelocity()/30.0);
-                break;
-            case 46:
-                piano->string_A2s->hit(message.getVelocity()/30.0);
-                break;
-            case 47:
-                piano->string_B2->hit(message.getVelocity()/30.0);
-                break;
-            case 48:
-                piano->string_C3->hit(message.getVelocity()/30.0);
-                break;
-            case 49:
-                piano->string_C3s->hit(message.getVelocity()/30.0);
-                break;
-            case 50:
-                piano->string_D3->hit(message.getVelocity()/30.0);
-                break;
-            case 51:
-                piano->string_D3s->hit(message.getVelocity()/30.0);
-                break;
-            case 52:
-                piano->string_E3->hit(message.getVelocity()/30.0);
-                break;
-            case 53:
-                piano->string_F3->hit(message.getVelocity()/30.0);
-                break;
-            case 54:
-                piano->string_F3s->hit(message.getVelocity()/30.0);
-                break;
-            case 55:
-                piano->string_G3->hit(message.getVelocity()/30.0);
-                break;
-            case 56:
-                piano->string_G3s->hit(message.getVelocity()/30.0);
-                break;
-            case 57:
-                piano->string_A3->hit(message.getVelocity()/30.0);
-                break;
-            case 58:
-                piano->string_A3s->hit(message.getVelocity()/30.0);
-                break;
-            case 59:
-                piano->string_B3->hit(message.getVelocity()/30.0);
-                break;
-            case 60:
-                piano->string_C4->hit(message.getVelocity()/30.0);
-                break;
-            default:
-                break;
-            }
+            piano->strings[message.getNoteNumber()-MIDI_NOTE_OFFSET]->hit(message.getVelocity()/30.0);
         }
     }
 
     int numSamples = buffer.getNumSamples();
     float* outputChannelData = buffer.getWritePointer (0);
-    float gain = 200;
-    piano->get_next_block_multithreaded(outputChannelData, outputBuffer_oct_2, outputBuffer_oct_3, numSamples, gain);
-
-    /*for (int i = 0; i < numSamples; ++i)
-    {
-        float gain = 250;
-        float currentSample = piano->get_next_sample(gain);
-        for (int channel = 0; channel < totalNumOutputChannels; ++channel)
-        {
-            float* outputChannelData = buffer.getWritePointer (channel);
-            outputChannelData[i] = currentSample;
-        }
-    }*/
+    float gain = 150;
+    //piano->get_next_block(outputChannelData, numSamples, gain);
+    piano->get_next_block_multithreaded(outputChannelData, numSamples, gain);
+    //piano->get_next_block_multithreaded_old(outputChannelData, outputBuffer_oct_2, outputBuffer_oct_3, numSamples, gain);
 }
 
 //==============================================================================
