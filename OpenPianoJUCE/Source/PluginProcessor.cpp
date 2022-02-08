@@ -108,9 +108,7 @@ void OpenPianoAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     // initialisation that you need..
 
     // Initialize the piano and the output buffer
-    piano = new Piano(sampleRate);
-    outputBuffer_oct_2 = (float*)malloc(samplesPerBlock*sizeof (float));
-    outputBuffer_oct_3 = (float*)malloc(samplesPerBlock*sizeof (float));
+    piano = new Piano(sampleRate, samplesPerBlock);
 }
 
 void OpenPianoAudioProcessor::releaseResources()
@@ -118,8 +116,6 @@ void OpenPianoAudioProcessor::releaseResources()
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
     delete piano;
-    free(outputBuffer_oct_2);
-    free(outputBuffer_oct_3);
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -182,12 +178,12 @@ void OpenPianoAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
         }
     }
 
-    int numSamples = buffer.getNumSamples();
-    float* outputChannelData = buffer.getWritePointer (0);
+    int samplesPerBlock = buffer.getNumSamples();
+    float* outputChannelData = buffer.getWritePointer(0);
     float gain = 150;
-    //piano->get_next_block(outputChannelData, numSamples, gain);
-    piano->get_next_block_threadpooled(outputChannelData, numSamples, gain);
-    //piano->get_next_block_multithreaded(outputChannelData, outputBuffer_oct_2, outputBuffer_oct_3, numSamples, gain);
+    //piano->get_next_block(outputChannelData, samplesPerBlock, gain);
+    //piano->get_next_block_fourthreads(outputChannelData, samplesPerBlock, gain);
+    piano->get_next_block_multithreaded(outputChannelData, samplesPerBlock, gain);
 }
 
 //==============================================================================

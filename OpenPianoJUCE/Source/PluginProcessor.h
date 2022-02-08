@@ -75,6 +75,4 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OpenPianoAudioProcessor)
 
     Piano* piano;
-    float* outputBuffer_oct_2;
-    float* outputBuffer_oct_3;
 };

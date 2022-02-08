@@ -13,7 +13,6 @@
       <FILE id="BGTk62" name="dr_wav.h" compile="0" resource="0" file="../OpenPianoCore/dr_wav.h"/>
       <FILE id="dn67Hr" name="piano.h" compile="0" resource="0" file="../OpenPianoCore/piano.h"/>
       <FILE id="icLbit" name="string_hammer.h" compile="0" resource="0" file="../OpenPianoCore/string_hammer.h"/>
-      <FILE id="xRd13x" name="thread_pool.h" compile="0" resource="0" file="../OpenPianoCore/thread_pool.h"/>
     </GROUP>
     <GROUP id="{56D4A909-677C-B26B-3FCB-E90596986A2C}" name="Source">
       <FILE id="Hp6cxg" name="PluginProcessor.cpp" compile="1" resource="0"

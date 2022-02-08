@@ -20,15 +20,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #ifndef PIANO_H
 #define PIANO_H
 
-#include <thread>
 #include "string_hammer.h"
-#include "thread_pool.h"
+#include <thread>
+#include <vector>
+#include <atomic>
+#include <mutex>
+#include <iostream>
 
-/* **************************************************** *
- * The piano class contains all the strings and hammers *
- * **************************************************** */
+/* ***************************************************** *
+ * The piano class contains all the strings and hammers. *
+ * It provides a simple API to compute audio blocks.     *
+ * ***************************************************** */
 
-enum Indices
+enum NoteIndices
 {
                                             A0, A0s, B0,
     C1, C1s, D1, D1s, E1, F1, F1s, G1, G1s, A1, A1s, B1,
@@ -45,30 +49,48 @@ const int FIRST_NOTE = A0;
 const int LAST_NOTE = C5;
 const int N_STRINGS = LAST_NOTE-FIRST_NOTE+1;
 const int MIDI_NOTE_OFFSET = 21;
-const int N_WHITE_KEYS = 31; // 52 for the entire range
-
-const int MAX_BLOCK_SIZE = 4096;
+const int N_WHITE_KEYS = 31; // 52 for the entire piano range
 
 struct Piano
 {
     Hammer* hammers[N_STRINGS];
     String* strings[N_STRINGS];
+
     int sample_rate;
+    int samples_per_block;
 
-    thread_pool pool;
-    float** buffers;
+    int N_THREADS; // How many threads should we start
+    std::vector<std::thread*> threads; // Store the active threads here
+    float** buffers; // Each thread has its own buffer
+    bool* thr_running; // Array that contains one flag for each thread.
+                       // It is set to "true" for the entire execution of the program.
+                       // It is set to "false" when we want to terminate the threads
+    bool* thr_waiting_for_block; // Array that contains one flag for each thread.
+                                 // Used to keep threads running in an empty "while" loop
+                                 // until next audio block is requested
+    int n_running_threads; // How many threads are computing an audio block right now.
+                           // n_running_threads == 0 -> all threads are doing nothing
+                           // n_running_threads == N_THREADS -> all threads are working
+    std::mutex mtx; // To protect the "n_running_threads" variable, modified by all threads
+    uint32_t sleep_duration; // How often should threads wake up to check if the
+                             // next audio block has been requested
 
-    Piano(int sample_rate)
+    Piano(int sample_rate, int samples_per_block)
     {
         this->sample_rate = sample_rate;
+        this->samples_per_block = samples_per_block;
+        this->N_THREADS = 4; // TODO: receive the number of threads as argument
+        n_running_threads = 0;
 
         // Initialize the audio buffers
-        buffers = (float**)malloc(N_STRINGS * sizeof(float*));
-        for(int i = 0; i < N_STRINGS; i++)
+        buffers = (float**)malloc(N_THREADS * sizeof(float*));
+        for(int i = 0; i < N_THREADS; i++)
         {
-            buffers[i] = (float*)malloc(MAX_BLOCK_SIZE * sizeof(float));
+            buffers[i] = (float*)malloc(this->samples_per_block * sizeof(float));
         }
-        pool.sleep_duration = 1666;
+
+        // Initialize the threads
+        init_threads();
 
         // Initialize the hammers with their physical parameters
         init_hammers();
@@ -78,6 +100,31 @@ struct Piano
     }
     ~Piano()
     {
+        // Delete the threads
+        for(int i = 0; i < N_THREADS; i++)
+        {
+            // Stop the current audio block computation: set the "thr_waiting_for_block" flag to "true"
+            // This is a precaution: typically, we don't exit the program in the middle of an audio block.
+            // But, for example, we could be dealing with an extremely long block, and there's no need
+            // to wait for its completion before exiting the program
+            thr_waiting_for_block[i] = true;
+
+            // Stop the "while" loop: set the "thread_running" flags to "false"
+            thr_running[i] = false;
+
+            // Each thread checks the "thr_running" flag every "sleep_duration" microseconds,
+            // so let's sleep for a while and give him the time to check it
+            std::this_thread::sleep_for(std::chrono::microseconds(sleep_duration*2));
+
+            // Finally, we can safely delete the threads
+            // (reminder: don't join them, because they're detached)
+            delete threads[i];
+        }
+
+        // Delete the flag arrays
+        free(thr_waiting_for_block);
+        free(thr_running);
+
         // Delete the hammers and strings
         for(int i = 0; i < N_STRINGS; i++)
         {
@@ -86,30 +133,153 @@ struct Piano
         }
 
         // Free the audio buffers
-        for(int i = 0; i < N_STRINGS; i++)
+        for(int i = 0; i < N_THREADS; i++)
         {
             free(buffers[i]);
         }
         free(buffers);
     }
-    void get_next_block_threadpooled(float* buffer, size_t block_length, float gain)
+    void get_next_block_multithreaded(float* buffer, int samples_per_block, float gain)
     {
-        for(int i = 0; i < N_STRINGS; i++)
+        // Activate the threads
+        for(int idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
         {
-            pool.push_task([=]
+            thr_waiting_for_block[idx_thread] = false;
+        }
+
+        // Wait for the threads to compute their blocks
+        // Remember that the threads are detached and are running in an infinite loop,
+        // so we have to check every once in a while whether they're finished.
+        while(true)
+        {
+            // Each thread increments the "n_running_threads" counter once it begins computing its block,
+            // and decrements it once it's finished. When the counter is 0, then all threads are finished.
+            if (n_running_threads == 0)
             {
-                strings[i]->get_next_block(buffers[i], block_length, gain);
+                break;
+            }
+            //std::this_thread::sleep_for(std::chrono::microseconds(sleep_duration));
+        }
+
+        // Each thread has its own buffer. At this point, all threads have written
+        // its computed audio block into it.
+        // Now we have to mix (sum) these blocks into the output buffer.
+        for(int i = 0; i < samples_per_block; i++)
+        {
+            buffer[i] = 0;
+            for(int idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
+            {
+                buffer[i] += gain*(buffers[idx_thread][i]);
+            }
+        }
+    }
+    void init_threads()
+    {
+        // Allocate and initialize the arrays of flags (one for each thread)
+
+        // Flags that keep each thread running inside its infinite "while" loop
+        thr_running = (bool*)malloc(sizeof(bool)*N_THREADS);
+        for(int idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
+        {
+            thr_running[idx_thread] = true;
+        }
+
+        // Flags used to signal to the thread that a new block has to be computed
+        thr_waiting_for_block = (bool*)malloc(sizeof(bool)*N_THREADS);
+        for(int idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
+        {
+            thr_waiting_for_block[idx_thread] = true;
+        }
+
+
+        // Create "n_threads" threads and pause them
+        sleep_duration = 50; // Should be proportional to (samples_per_block/sampling_rate) seconds
+        //sleep_duration = ((samples_per_block/sample_rate)*10e6)/25; // Sleep for 1/25th of the block duration
+                                            // For example: (256/48000)*10e6 --> 5333 microseconds
+                                            //                divided by 10  --> 533 microseconds of sleep
+                                            //                divided by 25  --> 213 microseconds of sleep
+        threads.resize(N_THREADS);
+        for(int idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
+        {
+            threads[idx_thread] = new std::thread([=]
+            {
+                while(thr_running[idx_thread] == true)
+                {
+                    // If the thread isn't paused
+                    if(thr_waiting_for_block[idx_thread] == false)
+                    {
+                        // Signal that the block is about to be computed
+                        mtx.lock();
+                        n_running_threads++;
+                        mtx.unlock();
+
+                        // Compute the block
+                        if(idx_thread == 0)
+                        {
+                            for(size_t i = 0; i < samples_per_block; i++)
+                            {
+                                buffers[idx_thread][i] = 0.0f;
+                                for(int j = A0; j <= F1; j++)
+                                {
+                                    buffers[idx_thread][i] += strings[j]->get_next_sample();
+                                }
+                            }
+                        }
+                        else if(idx_thread == 1)
+                        {
+                            for(size_t i = 0; i < samples_per_block; i++)
+                            {
+                                buffers[idx_thread][i] = 0.0f;
+                                for(int j = F1s; j <= F2; j++)
+                                {
+                                    buffers[idx_thread][i] += strings[j]->get_next_sample();
+                                }
+                            }
+                        }
+                        else if(idx_thread == 2)
+                        {
+                            for(size_t i = 0; i < samples_per_block; i++)
+                            {
+                                buffers[idx_thread][i] = 0.0f;
+                                for(int j = F2s; j <= F3; j++)
+                                {
+                                    buffers[idx_thread][i] += strings[j]->get_next_sample();
+                                }
+                            }
+                        }
+                        else if(idx_thread == 3)
+                        {
+                            for(size_t i = 0; i < samples_per_block; i++)
+                            {
+                                buffers[idx_thread][i] = 0.0f;
+                                for(int j = F3s; j <= LAST_NOTE; j++)
+                                {
+                                    buffers[idx_thread][i] += strings[j]->get_next_sample();
+                                }
+                            }
+                        }
+
+                        // Signal that the block has been computed
+                        mtx.lock();
+                        n_running_threads--;
+                        mtx.unlock();
+
+                        // Go to sleep
+                        thr_waiting_for_block[idx_thread] = true;
+                    }
+                    // If the thread is paused, sleep for "sleep_duration" microseconds
+                    else
+                    {
+                        std::this_thread::sleep_for(std::chrono::microseconds(sleep_duration));
+                    }
+                }
             });
         }
-        pool.wait_for_tasks();
 
-        for(int j = 0; j < block_length; j++)
+        // Detach the threads
+        for(int idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
         {
-            buffer[j] = 0;
-            for(int i = 0; i < N_STRINGS; i++)
-            {
-                buffer[j] += buffers[i][j];
-            }
+            threads[idx_thread]->detach();
         }
     }
     float get_next_sample(float gain)
@@ -128,59 +298,61 @@ struct Piano
             buffer[i] = this->get_next_sample(gain);
         }
     }
-    void get_next_sample_octave_2(float* sample, float gain)
+    void get_next_block_fourthreads(float* buffer_mix, int samples_per_block, float gain)
     {
-        *sample = 0.0f;
-        for(int i = C2; i <= B2; i++)
+        std::thread thr_1 ([=]
         {
-            *sample += gain*strings[i]->get_next_sample();
-        }
-    }
-    void get_next_sample_octave_3(float* sample, float gain)
-    {
-        *sample = 0.0f;
-        for(int i = C3; i <= C4; i++)
-        {
-            *sample += gain*strings[i]->get_next_sample();
-        }
-    }
-    void get_next_block_octave_2(float* buffer, size_t length, float gain)
-    {
-        for(size_t i = 0; i < length; i++)
-        {
-            get_next_sample_octave_2(&buffer[i], gain);
-        }
-    }
-    void get_next_block_octave_3(float* buffer, size_t length, float gain)
-    {
-        for(size_t i = 0; i < length; i++)
-        {
-            get_next_sample_octave_3(&buffer[i], gain);
-        }
-    }
-    void get_next_block_multithreaded(float* buffer_mix, float* buffer_oct_2, float* buffer_oct_3, size_t length, float gain)
-    {
-        std::thread thr_oct_2 ([=]
-        {
-            for(size_t i = 0; i < length; i++)
+            for(size_t i = 0; i < samples_per_block; i++)
             {
-                get_next_sample_octave_2(&buffer_oct_2[i], gain);
+                buffers[0][i] = 0.0f;
+                for(int j = FIRST_NOTE; j <= F1; j++)
+                {
+                    buffers[0][i] += gain*strings[j]->get_next_sample();
+                }
             }
         });
-        std::thread thr_oct_3 ([=]
+        std::thread thr_2 ([=]
         {
-            for(size_t i = 0; i < length; i++)
+            for(size_t i = 0; i < samples_per_block; i++)
             {
-                get_next_sample_octave_3(&buffer_oct_3[i], gain);
+                buffers[1][i] = 0.0f;
+                for(int j = F1s; j <= F2; j++)
+                {
+                    buffers[1][i] += gain*strings[j]->get_next_sample();
+                }
+            }
+        });
+        std::thread thr_3 ([=]
+        {
+            for(size_t i = 0; i < samples_per_block; i++)
+            {
+                buffers[2][i] = 0.0f;
+                for(int j = F2s; j <= F3; j++)
+                {
+                    buffers[2][i] += gain*strings[j]->get_next_sample();
+                }
+            }
+        });
+        std::thread thr_4 ([=]
+        {
+            for(size_t i = 0; i < samples_per_block; i++)
+            {
+                buffers[3][i] = 0.0f;
+                for(int j = F3s; j <= LAST_NOTE; j++)
+                {
+                    buffers[3][i] += gain*strings[j]->get_next_sample();
+                }
             }
         });
 
-        thr_oct_2.join();
-        thr_oct_3.join();
+        thr_1.join();
+        thr_2.join();
+        thr_3.join();
+        thr_4.join();
 
-        for(size_t i = 0; i < length; i++)
+        for(size_t i = 0; i < samples_per_block; i++)
         {
-            buffer_mix[i] = buffer_oct_2[i] + buffer_oct_3[i];
+            buffer_mix[i] = buffers[0][i] + buffers[1][i] + buffers[2][i] + buffers[3][i];
         }
     }
     void init_hammers()

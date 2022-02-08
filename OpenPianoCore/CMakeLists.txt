@@ -13,7 +13,6 @@ add_executable(OpenPianoCore
     array_helpers.cpp
     string_hammer.h
     piano.h
-    thread_pool.h
     )
 
 IF (NOT WIN32)
