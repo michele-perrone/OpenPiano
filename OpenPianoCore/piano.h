@@ -83,11 +83,7 @@ struct Piano
         n_running_threads = 0;
 
         // Initialize the audio buffers
-        buffers = (float**)malloc(N_THREADS * sizeof(float*));
-        for(int i = 0; i < N_THREADS; i++)
-        {
-            buffers[i] = (float*)malloc(this->samples_per_block * sizeof(float));
-        }
+        init_buffers();
 
         // Initialize the threads
         init_threads();
@@ -281,6 +277,21 @@ struct Piano
         {
             threads[idx_thread]->detach();
         }
+    }
+    void init_buffers()
+    {
+        // Allocate the buffers
+        buffers = (float**)malloc(N_THREADS * sizeof(float*));
+        for(int idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
+        {
+            buffers[idx_thread] = (float*)malloc(this->samples_per_block * sizeof(float));
+        }
+
+        // Initialize the buffers to zeros.
+        // This prevents from drilling people's ears when they change the buffer size in the plugin!
+        for (int idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
+            for (int i = 0; i < samples_per_block; i++)
+                buffers[idx_thread][i] = 0;
     }
     float get_next_sample(float gain)
     {
