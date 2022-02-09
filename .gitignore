@@ -1,11 +1,6 @@
-.buildconfig
-FRUT/
-JUCE/
-
-OpenPianoJUCE/CMakeLists.txt
 OpenPianoJUCE/CMakeLists.txt.user*
 OpenPianoJUCE/Builds/
-OpenPianoJUCE/JuceLibraryCode/
+OpenPianoJUCE/JUCE/
 
 OpenPianoCore/CMakeLists.txt.user*
 OpenPianoCore/build-Debug/

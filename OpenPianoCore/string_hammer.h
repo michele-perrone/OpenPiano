@@ -112,7 +112,7 @@ struct Hammer
     }
 };
 
-struct String
+struct PianoString
 {
     // Hammer that hits this string
     Hammer* h;
@@ -197,7 +197,7 @@ struct String
     uint64_t is_active_check_ctr; // Counter for triggering the "check_if_active()" function
 
     // Methods
-    String(int Fs, double f0, double L, double rho, double S, double E, double b1, double b2, Hammer * h)
+    PianoString(int Fs, double f0, double L, double rho, double S, double E, double b1, double b2, Hammer * h)
     {
         // Sampling frequency and period
         this->Fs = Fs;
@@ -301,7 +301,7 @@ struct String
         this->is_active = false;
         this->is_active_check_ctr = 0;
     }
-    ~String()
+    ~PianoString()
     {
         for(int i = 0; i < len_x_axis+2; i++)
         {

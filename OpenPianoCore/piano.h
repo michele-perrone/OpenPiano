@@ -54,7 +54,7 @@ const int N_WHITE_KEYS = 31; // 52 for the entire piano range
 struct Piano
 {
     Hammer* hammers[N_STRINGS];
-    String* strings[N_STRINGS];
+    PianoString* strings[N_STRINGS];
 
     int sample_rate;
     int samples_per_block;
@@ -467,102 +467,102 @@ struct Piano
     }
     void init_strings()
     {
-        strings[A0] = new String(sample_rate, 27.5, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[A0]);
-        strings[A0s] = new String(sample_rate, 29.14, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[A0s]);
-        strings[B0] = new String(sample_rate, 30.87, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[B0]);
+        strings[A0] = new PianoString(sample_rate, 27.5, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[A0]);
+        strings[A0s] = new PianoString(sample_rate, 29.14, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[A0s]);
+        strings[B0] = new PianoString(sample_rate, 30.87, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[B0]);
 
-        strings[C1] = new String(sample_rate, 32.7, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[C1]);
-        strings[C1s] = new String(sample_rate, 34.65, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[C1s]);
-        strings[D1] = new String(sample_rate, 36.71, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[D1]);
-        strings[D1s] = new String(sample_rate, 38.89, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[D1s]);
-        strings[E1] = new String(sample_rate, 41.20, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[E1]);
-        strings[F1] = new String(sample_rate, 43.65, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[F1]);
-        strings[F1s] = new String(sample_rate, 46.25, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[F1s]);
-        strings[G1] = new String(sample_rate, 49.00, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[G1]);
-        strings[G1s] = new String(sample_rate, 51.91, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[G1s]);
-        strings[A1] = new String(sample_rate, 55.00, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[A1]);
-        strings[A1s] = new String(sample_rate, 58.27, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[A1s]);
-        strings[B1] = new String(sample_rate, 61.74, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[B1]);
+        strings[C1] = new PianoString(sample_rate, 32.7, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[C1]);
+        strings[C1s] = new PianoString(sample_rate, 34.65, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[C1s]);
+        strings[D1] = new PianoString(sample_rate, 36.71, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[D1]);
+        strings[D1s] = new PianoString(sample_rate, 38.89, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[D1s]);
+        strings[E1] = new PianoString(sample_rate, 41.20, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[E1]);
+        strings[F1] = new PianoString(sample_rate, 43.65, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[F1]);
+        strings[F1s] = new PianoString(sample_rate, 46.25, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[F1s]);
+        strings[G1] = new PianoString(sample_rate, 49.00, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[G1]);
+        strings[G1s] = new PianoString(sample_rate, 51.91, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[G1s]);
+        strings[A1] = new PianoString(sample_rate, 55.00, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[A1]);
+        strings[A1s] = new PianoString(sample_rate, 58.27, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[A1s]);
+        strings[B1] = new PianoString(sample_rate, 61.74, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[B1]);
 
-        strings[C2] = new String(sample_rate, 65.41, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[C2]);
-        strings[C2s] = new String(sample_rate, 69.30, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[C2s]);
-        strings[D2] = new String(sample_rate, 73.42, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[D2]);
-        strings[D2s] = new String(sample_rate, 77.78, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[D2s]);
-        strings[E2] = new String(sample_rate, 82.41, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[E2]);
-        strings[F2] = new String(sample_rate, 87.31, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[F2]);
-        strings[F2s] = new String(sample_rate, 92.50, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[F2s]);
-        strings[G2] = new String(sample_rate, 98.00, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[G2]);
-        strings[G2s] = new String(sample_rate, 103.83, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[G2s]);
-        strings[A2] = new String(sample_rate, 110.00, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[A2]);
-        strings[A2s] = new String(sample_rate, 116.54, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[A2s]);
-        strings[B2] = new String(sample_rate, 123.47, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[B2]);
+        strings[C2] = new PianoString(sample_rate, 65.41, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[C2]);
+        strings[C2s] = new PianoString(sample_rate, 69.30, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[C2s]);
+        strings[D2] = new PianoString(sample_rate, 73.42, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[D2]);
+        strings[D2s] = new PianoString(sample_rate, 77.78, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[D2s]);
+        strings[E2] = new PianoString(sample_rate, 82.41, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[E2]);
+        strings[F2] = new PianoString(sample_rate, 87.31, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[F2]);
+        strings[F2s] = new PianoString(sample_rate, 92.50, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[F2s]);
+        strings[G2] = new PianoString(sample_rate, 98.00, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[G2]);
+        strings[G2s] = new PianoString(sample_rate, 103.83, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[G2s]);
+        strings[A2] = new PianoString(sample_rate, 110.00, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[A2]);
+        strings[A2s] = new PianoString(sample_rate, 116.54, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[A2s]);
+        strings[B2] = new PianoString(sample_rate, 123.47, 1.92, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[B2]);
 
-        strings[C3] = new String(sample_rate, 130.81, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[C3]);
-        strings[C3s] = new String(sample_rate, 138.59, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[C3s]);
-        strings[D3] = new String(sample_rate, 146.83, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[D3]);
-        strings[D3s] = new String(sample_rate, 155.56, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[D3s]);
-        strings[E3] = new String(sample_rate, 164.81, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[E3]);
-        strings[F3] = new String(sample_rate, 174.61, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[F3]);
-        strings[F3s] = new String(sample_rate, 185.00, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[F3s]);
-        strings[G3] = new String(sample_rate, 196, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[G3]);
-        strings[G3s] = new String(sample_rate, 207.65, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[G3s]);
-        strings[A3] = new String(sample_rate, 220, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[A3]);
-        strings[A3s] = new String(sample_rate, 233.08, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[A3s]);
-        strings[B3] = new String(sample_rate, 246.94, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[B3]);
+        strings[C3] = new PianoString(sample_rate, 130.81, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[C3]);
+        strings[C3s] = new PianoString(sample_rate, 138.59, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[C3s]);
+        strings[D3] = new PianoString(sample_rate, 146.83, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[D3]);
+        strings[D3s] = new PianoString(sample_rate, 155.56, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[D3s]);
+        strings[E3] = new PianoString(sample_rate, 164.81, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[E3]);
+        strings[F3] = new PianoString(sample_rate, 174.61, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[F3]);
+        strings[F3s] = new PianoString(sample_rate, 185.00, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[F3s]);
+        strings[G3] = new PianoString(sample_rate, 196, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[G3]);
+        strings[G3s] = new PianoString(sample_rate, 207.65, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[G3s]);
+        strings[A3] = new PianoString(sample_rate, 220, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[A3]);
+        strings[A3s] = new PianoString(sample_rate, 233.08, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[A3s]);
+        strings[B3] = new PianoString(sample_rate, 246.94, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[B3]);
 
-        strings[C4] = new String(sample_rate, 261.63, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[C4]);
-        strings[C4s] = new String(sample_rate, 277.18, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[C4s]);
-        strings[D4] = new String(sample_rate, 293.66, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[D4]);
-        strings[D4s] = new String(sample_rate, 311.13, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[D4s]);
-        strings[E4] = new String(sample_rate, 329.63, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[E4]);
-        strings[F4] = new String(sample_rate, 349.23, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[F4]);
-        strings[F4s] = new String(sample_rate, 369.99, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[F4s]);
-        strings[G4] = new String(sample_rate, 392.00, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[G4]);
-        strings[G4s] = new String(sample_rate, 415.30, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[G4s]);
-        strings[A4] = new String(sample_rate, 440.00, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[A4]);
-        strings[A4s] = new String(sample_rate, 466.16, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[A4s]);
-        strings[B4] = new String(sample_rate, 493.88, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[B4]);
+        strings[C4] = new PianoString(sample_rate, 261.63, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[C4]);
+        strings[C4s] = new PianoString(sample_rate, 277.18, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[C4s]);
+        strings[D4] = new PianoString(sample_rate, 293.66, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[D4]);
+        strings[D4s] = new PianoString(sample_rate, 311.13, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[D4s]);
+        strings[E4] = new PianoString(sample_rate, 329.63, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[E4]);
+        strings[F4] = new PianoString(sample_rate, 349.23, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[F4]);
+        strings[F4s] = new PianoString(sample_rate, 369.99, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[F4s]);
+        strings[G4] = new PianoString(sample_rate, 392.00, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[G4]);
+        strings[G4s] = new PianoString(sample_rate, 415.30, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[G4s]);
+        strings[A4] = new PianoString(sample_rate, 440.00, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[A4]);
+        strings[A4s] = new PianoString(sample_rate, 466.16, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[A4s]);
+        strings[B4] = new PianoString(sample_rate, 493.88, 0.96, 0.0182, 0.001, 9e7, 0.003, 6.25e-9, hammers[B4]);
 
-        strings[C5] = new String(sample_rate, 523.25, 0.96, 0.0182, 0.0008, 9e7, 0.003, 6.25e-9, hammers[C5]);
-        /*strings[C5s] = new String(sample_rate, 554.37, 0.96, 0.0182, 0.0008, 9e7, 0.003, 6.25e-9, hammers[C5s]);
-        strings[D5] = new String(sample_rate, 587.33, 0.96, 0.0182, 0.0008, 9e7, 0.003, 6.25e-9, hammers[D5]);
-        strings[D5s] = new String(sample_rate, 622.25, 0.96, 0.0182, 0.0008, 9e7, 0.003, 6.25e-9, hammers[D5s]);
-        strings[E5] = new String(sample_rate, 659.26, 0.96, 0.0182, 0.0008, 9e7, 0.003, 6.25e-9, hammers[E5]);
-        strings[F5] = new String(sample_rate, 698.46, 0.96, 0.0182, 0.0008, 9e7, 0.003, 6.25e-9, hammers[F5]);
-        strings[F5s] = new String(sample_rate, 739.99, 0.96, 0.0182, 0.0008, 9e7, 0.003, 6.25e-9, hammers[F5s]);
-        strings[G5] = new String(sample_rate, 783.99, 0.96, 0.0182, 0.0008, 9e7, 0.003, 6.25e-9, hammers[G5]);
-        strings[G5s] = new String(sample_rate, 830.61, 0.96, 0.0182, 0.0008, 9e7, 0.003, 6.25e-9, hammers[G5s]);
-        strings[A5] = new String(sample_rate, 880.00, 0.96, 0.0182, 0.0008, 9e7, 0.003, 6.25e-9, hammers[A5]);
-        strings[A5s] = new String(sample_rate, 932.33, 0.96, 0.0182, 0.0008, 9e7, 0.003, 6.25e-9, hammers[A5s]);
-        strings[B5] = new String(sample_rate, 987.77, 0.96, 0.0182, 0.0008, 9e7, 0.003, 6.25e-9, hammers[B5]);
+        strings[C5] = new PianoString(sample_rate, 523.25, 0.96, 0.0182, 0.0008, 9e7, 0.003, 6.25e-9, hammers[C5]);
+        /*strings[C5s] = new PianoString(sample_rate, 554.37, 0.96, 0.0182, 0.0008, 9e7, 0.003, 6.25e-9, hammers[C5s]);
+        strings[D5] = new PianoString(sample_rate, 587.33, 0.96, 0.0182, 0.0008, 9e7, 0.003, 6.25e-9, hammers[D5]);
+        strings[D5s] = new PianoString(sample_rate, 622.25, 0.96, 0.0182, 0.0008, 9e7, 0.003, 6.25e-9, hammers[D5s]);
+        strings[E5] = new PianoString(sample_rate, 659.26, 0.96, 0.0182, 0.0008, 9e7, 0.003, 6.25e-9, hammers[E5]);
+        strings[F5] = new PianoString(sample_rate, 698.46, 0.96, 0.0182, 0.0008, 9e7, 0.003, 6.25e-9, hammers[F5]);
+        strings[F5s] = new PianoString(sample_rate, 739.99, 0.96, 0.0182, 0.0008, 9e7, 0.003, 6.25e-9, hammers[F5s]);
+        strings[G5] = new PianoString(sample_rate, 783.99, 0.96, 0.0182, 0.0008, 9e7, 0.003, 6.25e-9, hammers[G5]);
+        strings[G5s] = new PianoString(sample_rate, 830.61, 0.96, 0.0182, 0.0008, 9e7, 0.003, 6.25e-9, hammers[G5s]);
+        strings[A5] = new PianoString(sample_rate, 880.00, 0.96, 0.0182, 0.0008, 9e7, 0.003, 6.25e-9, hammers[A5]);
+        strings[A5s] = new PianoString(sample_rate, 932.33, 0.96, 0.0182, 0.0008, 9e7, 0.003, 6.25e-9, hammers[A5s]);
+        strings[B5] = new PianoString(sample_rate, 987.77, 0.96, 0.0182, 0.0008, 9e7, 0.003, 6.25e-9, hammers[B5]);
 
-        strings[C6] = new String(sample_rate, 1046.50, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[C6]);
-        strings[C6s] = new String(sample_rate, 1108.73, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[C6s]);
-        strings[D6] = new String(sample_rate, 1174.66, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[D6]);
-        strings[D6s] = new String(sample_rate, 1244.51, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[D6s]);
-        strings[E6] = new String(sample_rate, 1318.51, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[E6]);
-        strings[F6] = new String(sample_rate, 1396.91, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[F6]);
-        strings[F6s] = new String(sample_rate, 1479.98, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[F6s]);
-        strings[G6] = new String(sample_rate, 1567.98, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[G6]);
-        strings[G6s] = new String(sample_rate, 1661.22, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[G6s]);
-        strings[A6] = new String(sample_rate, 1760.00, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[A6]);
-        strings[A6s] = new String(sample_rate, 1864.66, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[A6s]);
-        strings[B6] = new String(sample_rate, 1975.53, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[B6]);
+        strings[C6] = new PianoString(sample_rate, 1046.50, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[C6]);
+        strings[C6s] = new PianoString(sample_rate, 1108.73, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[C6s]);
+        strings[D6] = new PianoString(sample_rate, 1174.66, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[D6]);
+        strings[D6s] = new PianoString(sample_rate, 1244.51, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[D6s]);
+        strings[E6] = new PianoString(sample_rate, 1318.51, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[E6]);
+        strings[F6] = new PianoString(sample_rate, 1396.91, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[F6]);
+        strings[F6s] = new PianoString(sample_rate, 1479.98, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[F6s]);
+        strings[G6] = new PianoString(sample_rate, 1567.98, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[G6]);
+        strings[G6s] = new PianoString(sample_rate, 1661.22, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[G6s]);
+        strings[A6] = new PianoString(sample_rate, 1760.00, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[A6]);
+        strings[A6s] = new PianoString(sample_rate, 1864.66, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[A6s]);
+        strings[B6] = new PianoString(sample_rate, 1975.53, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[B6]);
 
-        strings[C7] = new String(sample_rate, 2093.00, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[C7]);
-        strings[C7s] = new String(sample_rate, 2217.46, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[C7s]);
-        strings[D7] = new String(sample_rate, 2349.32, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[D7]);
-        strings[D7s] = new String(sample_rate, 2489.02, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[D7s]);
-        strings[E7] = new String(sample_rate, 2637.02, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[E7]);
-        strings[F7] = new String(sample_rate, 2793.83, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[F7]);
-        strings[F7s] = new String(sample_rate, 2959.96, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[F7s]);
-        strings[G7] = new String(sample_rate, 3135.96, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[G7]);
-        strings[G7s] = new String(sample_rate, 3322.44, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[G7s]);
-        strings[A7] = new String(sample_rate, 3520.00, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[A7]);
-        strings[A7s] = new String(sample_rate, 3729.31, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[A7s]);
-        strings[B7] = new String(sample_rate, 3951.07, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[B7]);
+        strings[C7] = new PianoString(sample_rate, 2093.00, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[C7]);
+        strings[C7s] = new PianoString(sample_rate, 2217.46, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[C7s]);
+        strings[D7] = new PianoString(sample_rate, 2349.32, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[D7]);
+        strings[D7s] = new PianoString(sample_rate, 2489.02, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[D7s]);
+        strings[E7] = new PianoString(sample_rate, 2637.02, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[E7]);
+        strings[F7] = new PianoString(sample_rate, 2793.83, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[F7]);
+        strings[F7s] = new PianoString(sample_rate, 2959.96, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[F7s]);
+        strings[G7] = new PianoString(sample_rate, 3135.96, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[G7]);
+        strings[G7s] = new PianoString(sample_rate, 3322.44, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[G7s]);
+        strings[A7] = new PianoString(sample_rate, 3520.00, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[A7]);
+        strings[A7s] = new PianoString(sample_rate, 3729.31, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[A7s]);
+        strings[B7] = new PianoString(sample_rate, 3951.07, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[B7]);
 
-        strings[C8] = new String(sample_rate, 4186.01, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[C8]);*/
+        strings[C8] = new PianoString(sample_rate, 4186.01, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[C8]);*/
     }
 };
 
