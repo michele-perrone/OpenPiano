@@ -64,12 +64,12 @@ juce_generate_juce_header(OpenPiano)
 
 target_sources(OpenPiano
     PRIVATE
-        ../OpenPianoCore/array_helpers.h
-        ../OpenPianoCore/array_helpers.cpp
-        ../OpenPianoCore/dr_wav.h
-        ../OpenPianoCore/dr_wav.cpp
-        ../OpenPianoCore/piano.h
-        ../OpenPianoCore/string_hammer.h
+        ../OpenPianoCore/Source/array_helpers.h
+        ../OpenPianoCore/Source/array_helpers.cpp
+        ../OpenPianoCore/Source/dr_wav.h
+        ../OpenPianoCore/Source/dr_wav.cpp
+        ../OpenPianoCore/Source/piano.h
+        ../OpenPianoCore/Source/string_hammer.h
         Source/PluginProcessor.h
         Source/PluginProcessor.cpp
         Source/PluginEditor.h
