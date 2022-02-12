@@ -31,7 +31,7 @@ int main()
     int n_threads = 4;
 
     // Initialize the piano
-    Piano piano(Fs, samples_per_block, n_threads);
+    Piano piano(Fs, samples_per_block);
 
     // Output sound init
     uint32_t duration = 30; // Duration of the synthesized signal [s]

@@ -57,30 +57,29 @@ struct Piano
     PianoString* strings[N_STRINGS];
 
     int sample_rate;
-    int samples_per_block;
+    size_t samples_per_block;
 
     int N_THREADS; // How many threads should we start
-    std::vector<std::thread*> threads; // Store the active threads here
-    float** buffers; // Each thread has its own buffer
-    bool* thr_running; // Array that contains one flag for each thread.
-                       // It is set to "true" for the entire execution of the program.
-                       // It is set to "false" when we want to terminate the threads
-    bool* thr_waiting_for_block; // Array that contains one flag for each thread.
-                                 // Used to keep threads running in an empty "while" loop
-                                 // until next audio block is requested
-    int n_running_threads; // How many threads are computing an audio block right now.
-                           // n_running_threads == 0 -> all threads are doing nothing
-                           // n_running_threads == N_THREADS -> all threads are working
-    std::mutex mtx; // To protect the "n_running_threads" variable, modified by all threads
-    uint32_t sleep_duration; // How often should threads wake up to check if the
-                             // next audio block has been requested
+    std::thread** threads; // Array that stores the pointers to the active threads
+    float** buffers; // Array of audio buffers, one for each thread, with length "samples_per_block"
+    std::atomic<bool>* thr_running; // Array that contains one flag for each thread.
+                                    // It is set to "true" to keep the thread inside a "while" loop.
+                                    // It is set to "false" when we want to terminate the thread.
+    std::atomic<bool>* thr_waiting_for_block; // Array that contains one flag for each thread.
+                                              // Used to keep threads running in an empty "while" loop
+                                              // until next audio block is requested
+    std::atomic<int> n_running_threads; // How many threads are computing an audio block right now.
+                                        // n_running_threads == 0 -> all threads are doing nothing
+                                        // n_running_threads == N_THREADS -> all threads are working
+    std::atomic<uint32_t> sleep_duration; // How often should threads wake up to check if the
+                                          // next audio block has been requested
 
     Piano(int sample_rate, int samples_per_block)
     {
         this->sample_rate = sample_rate;
         this->samples_per_block = samples_per_block;
         this->N_THREADS = 4; // TODO: receive the number of threads as argument
-        n_running_threads = 0;
+        this->n_running_threads = 0;
 
         // Initialize the audio buffers
         init_buffers();
@@ -116,6 +115,7 @@ struct Piano
             // (reminder: don't join them, because they're detached)
             delete threads[i];
         }
+        free(threads);
 
         // Delete the flag arrays
         free(thr_waiting_for_block);
@@ -137,6 +137,11 @@ struct Piano
     }
     void get_next_block_multithreaded(float* buffer, int samples_per_block, float gain)
     {
+        // TODO: Each time this function is called, we have to check if "n_running_threads" not zero.
+        //  If not, it means that this function got called before it had time to finish computing the previous block.
+        //  In that case, the threads have to be immediately notified to stop computing the previous block
+        //  and to start with the new one.
+
         // Activate the threads
         for(int idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
         {
@@ -174,14 +179,14 @@ struct Piano
         // Allocate and initialize the arrays of flags (one for each thread)
 
         // Flags that keep each thread running inside its infinite "while" loop
-        thr_running = (bool*)malloc(sizeof(bool)*N_THREADS);
+        thr_running = (std::atomic<bool>*)malloc(sizeof(std::atomic<bool>)*N_THREADS);
         for(int idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
         {
             thr_running[idx_thread] = true;
         }
 
         // Flags used to signal to the thread that a new block has to be computed
-        thr_waiting_for_block = (bool*)malloc(sizeof(bool)*N_THREADS);
+        thr_waiting_for_block = (std::atomic<bool>*)malloc(sizeof(std::atomic<bool>)*N_THREADS);
         for(int idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
         {
             thr_waiting_for_block[idx_thread] = true;
@@ -189,12 +194,13 @@ struct Piano
 
 
         // Create "n_threads" threads and pause them
-        sleep_duration = 50; // Should be proportional to (samples_per_block/sampling_rate) seconds
+        // TODO: based on "N_THREADS", assign to each thread a range of notes that they will be in charge of computing
+        sleep_duration = 20; // (microsecs) TODO: it should be proportional to (samples_per_block/sampling_rate) seconds
         //sleep_duration = ((samples_per_block/sample_rate)*10e6)/25; // Sleep for 1/25th of the block duration
                                             // For example: (256/48000)*10e6 --> 5333 microseconds
                                             //                divided by 10  --> 533 microseconds of sleep
                                             //                divided by 25  --> 213 microseconds of sleep
-        threads.resize(N_THREADS);
+        threads = (std::thread**)malloc(sizeof(std::thread*)*N_THREADS);
         for(int idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
         {
             threads[idx_thread] = new std::thread([=]
@@ -205,9 +211,7 @@ struct Piano
                     if(thr_waiting_for_block[idx_thread] == false)
                     {
                         // Signal that the block is about to be computed
-                        mtx.lock();
                         n_running_threads++;
-                        mtx.unlock();
 
                         // Compute the block
                         if(idx_thread == 0)
@@ -256,9 +260,7 @@ struct Piano
                         }
 
                         // Signal that the block has been computed
-                        mtx.lock();
                         n_running_threads--;
-                        mtx.unlock();
 
                         // Go to sleep
                         thr_waiting_for_block[idx_thread] = true;
