@@ -108,7 +108,7 @@ void OpenPianoAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     // initialisation that you need..
 
     // Initialize the piano and the output buffer
-    piano = new Piano(sampleRate, samplesPerBlock);
+    piano = new Piano(sampleRate, samplesPerBlock, std::thread::hardware_concurrency());
 }
 
 void OpenPianoAudioProcessor::releaseResources()
@@ -181,8 +181,6 @@ void OpenPianoAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     int samplesPerBlock = buffer.getNumSamples();
     float* outputChannelData = buffer.getWritePointer(0);
     float gain = 150;
-    //piano->get_next_block(outputChannelData, samplesPerBlock, gain);
-    //piano->get_next_block_fourthreads(outputChannelData, samplesPerBlock, gain);
     piano->get_next_block_multithreaded(outputChannelData, samplesPerBlock, gain);
 }
 
