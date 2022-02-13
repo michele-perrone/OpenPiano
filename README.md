@@ -5,28 +5,50 @@
 ## Summary
 ### [1. What is Open Piano?](#what-is-open-piano)
 ### [2. How do I use it?](#how-do-i-use-it)
-### [3. Current state and road map](#current-state-and-road-map)
-### [4. How does it work?](#how-does-it-work)
-### [5. Can I contribute to this project?](#can-i-contribute-to-this-project)
-### [6. Are you crazy?](#are-you-crazy)
+### [3. Building](#building)
+### [4. Current state and road map](#current-state-and-road-map)
+### [5. How does it work?](#how-does-it-work)
+### [6. Can I contribute to this project?](#can-i-contribute-to-this-project)
+### [7. Are you crazy?](#are-you-crazy)
 
 
 ## What is Open Piano?
 Open Piano is an attempt at recreating the characteristic sound of the piano with physical modeling sound synthesis. This allows for greater expressiveness and flexibility in comparison to sampled pianos. There is also no need to download huge libraries of audio samples, since everything is generated in real time.
 
 ## How do I use it?
-**DISCLAIMER:** I don't discourage you from trying out Open Piano, but please note that this is still alpha quality software. As of now, it is nowhere near commercial plugins like Modartt's [Pianoteq](https://www.modartt.com/pianoteq) (which I own, and love) or Arturia's [Piano V](https://www.arturia.com/products/analog-classics/piano-v/overview). A first binary release of Open Piano will be published once the project reaches a usable state. 
+**DISCLAIMER:** I don't discourage you from trying out Open Piano, but please note that this is still alpha quality software. As of now, it is nowhere near commercial plugins like Modartt's [Pianoteq](https://www.modartt.com/pianoteq) (which I own, and love) or Arturia's [Piano V](https://www.arturia.com/products/analog-classics/piano-v/overview). 
+
+A first binary release of Open Piano will be published once the project reaches a usable state.
+
+## Building
+To build Open Piano, you will need CMake (version 3.15 or above), a C++ compiler (C++17 or above), and the latest version of the [JUCE](https://github.com/juce-framework/JUCE) library. Once you clone/download this repository, you need to clone/download a copy of JUCE inside it. You end up with this directory structure:
+
+```
+OpenPiano
+├── JUCE/
+├── OpenPianoCore/
+├   ├── Source/
+├   └── CMakeLists.txt
+└── OpenPianoJUCE/
+    ├── Source/
+    └── CMakeLists.txt
+```
+* Windows/macOS/Linux: if you use a CMake-based IDE like CLion or QtCreator, use it to open `CMakeLists.txt` and proceed building from there.
+* Windows only: download and install the latest [CMake installer](https://cmake.org/download/), [Visual Studio Community](https://visualstudio.microsoft.com/vs/community/) IDE, and the [Windows SDK](https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/). Open CMake, point it to the source folder (OpenPianoJUCE or OpenPianoCore), and generate a VS project to be opened in Visual Studio.
+* macOS only: download and install XCode from the App Store and the [CMake installer](https://cmake.org/download/). Use CMake to generate an XCode project.
+* Linux/macOS and other UNIX/UNIX-based/UNIX-like operating systems: use the command line :wink:
 
 ## Current state and road map
 Right now, Open Piano sounds like a strangely out of tune piano with no soundboard, only one string per note, and no pedal. Here's a short list of what needs to be done:
-- ~~Fix repeated hits of the string by the hammer, without resetting the entire string displacement (see [here](https://github.com/michele-perrone/OpenPiano/blob/c338f46ce50802265661e2898c5619e9c2654629/OpenPianoCore/string_hammer.h#L307))~~ - [FIXED](https://github.com/michele-perrone/OpenPiano/commit/d0461f860075b43f8b4d246c1d99371dc0ab606f) 
-- Optimize the FD model to make it... usable. Take advantage of multithreading (being worked on, see [here](https://github.com/michele-perrone/OpenPiano/commit/eb89378566dbc875619000024de95a31c819be7c) and [here](https://github.com/michele-perrone/OpenPiano/commit/e0e39ef8e5ea7fce7f0421fb5f2a5fab7b39b1df))
-- Introduce the pedal and string damping
-- Introduce multiple strings per note and simulate the double decay phenomenon
-- Simulate the soundboard
-- Find a decent set of physical parameters for all the strings
-
-In case FD shows itself to be too burdensome, consider the possibility of switching to modal analysis.
+* [x] ~~Fix repeated hits of the string by the hammer, without resetting the entire string displacement (see [here](https://github.com/michele-perrone/OpenPiano/blob/c338f46ce50802265661e2898c5619e9c2654629/OpenPianoCore/string_hammer.h#L307))~~ - Fixed [HERE](https://github.com/michele-perrone/OpenPiano/commit/d0461f860075b43f8b4d246c1d99371dc0ab606f) 
+* [x] ~~Optimize the FD model to make it... usable~~ - Partially done [HERE](https://github.com/michele-perrone/OpenPiano/commit/eb89378566dbc875619000024de95a31c819be7c), but there's room for improvement
+* [x] ~~Take advantage of multithreading~~ - Semi-decent implementation [HERE](https://github.com/michele-perrone/OpenPiano/commit/c8868d6180c09d2e3bc9c06715db37fbe9c68205)
+* [ ] Add string dampers (normal people call it pedal)
+* [ ] Simulate multiple strings per note and the double decay phenomenon
+* [ ] Simulate the soundboard
+* [ ] Find a decent set of physical parameters for all the strings
+* [ ] Simulate sympathetic resonances
+* [ ] (In case FD shows itself to be too burdensome, consider the possibility of switching to modal analysis)
 
 ## How does it work?
 Everything starts from the differential equation of vibration of a lossy stiff string, hit by a hammer:
