@@ -69,6 +69,8 @@ public:
 
     //==============================================================================
     juce::MidiKeyboardState keyboardState;
+    bool pedal_down_previous;
+    bool pedal_down_current;
 
 private:
     //==============================================================================

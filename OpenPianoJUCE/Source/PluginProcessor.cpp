@@ -33,6 +33,7 @@ OpenPianoAudioProcessor::OpenPianoAudioProcessor()
                        )
 #endif
 {
+    pedal_down_current = false;
 }
 
 OpenPianoAudioProcessor::~OpenPianoAudioProcessor()
@@ -172,9 +173,39 @@ void OpenPianoAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     {
         juce::MidiMessage message = metadata.getMessage();
 
-        if (message.isNoteOn())
+        // To correctly deal with the pedal, we have to consider that some pedals send
+        // continuous messages. Right now, damping is implemented on a simple on/off
+        // basis, so we're only interested when the pedal goes up and down, nothing
+        // in between. To do so, we compare the current state of the pedal with the
+        // previous one. We damp the strings only when the pedal changes from down
+        // to up, otherwise we end up with a mess of messages to deal with.
+        if (message.isSustainPedalOn())
+        {
+            pedal_down_previous = pedal_down_current;
+            pedal_down_current = true;
+        }
+        else if (message.isSustainPedalOff())
+        {
+            pedal_down_previous = pedal_down_current;
+            pedal_down_current = false;
+            if(pedal_down_previous != pedal_down_current)
+            {
+                for (int i = 0; i < N_STRINGS; i++)
+                {
+                    // Damp only those strings which are not currently held down on the keyboard
+                    if(!keyboardState.isNoteOn(1, i+MIDI_NOTE_OFFSET))
+                        piano->strings[i]->damp();
+                }
+            }
+        }
+        else if (message.isNoteOn())
         {
             piano->strings[message.getNoteNumber()-MIDI_NOTE_OFFSET]->hit(message.getVelocity()/30.0);
+        }
+        // Strings are damped only if pedal is not down
+        else if (message.isNoteOff() && !pedal_down_current)
+        {
+            piano->strings[message.getNoteNumber()-MIDI_NOTE_OFFSET]->damp();
         }
     }
 

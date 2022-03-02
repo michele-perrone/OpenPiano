@@ -132,6 +132,7 @@ struct PianoString
     double E; // Young's modulus [N/m^2]
     double b1; // First damping coefficient
     double b2; // Second damping coefficient
+    double _b1, _b2; // These two hold the original values of the damping coeffients
 
     // These values are calculated
     double Ms; // Total mass [kg]
@@ -212,8 +213,8 @@ struct PianoString
         this->rho = rho;
         this->S = S;
         this->E = E;
-        this->b1 = b1;
-        this->b2 = b2;
+        this->_b1 = this->b1 = b1;
+        this->_b2 = this->b2 = b2;
 
         // Calculate the remaining physical parameters
         this->Ms = this->rho*this->L;
@@ -336,6 +337,7 @@ struct PianoString
         // "Activate" the string
         this->is_active = true;
         this->is_active_check_ctr = 0;
+        this->undamp();
 
         // Hitting the string means:
         // 1. Re-initializing the previous hammer position to zero
@@ -362,6 +364,60 @@ struct PianoString
             h->Fh[n_0] = 0.0f; // Hammer not in contact with string -> force is 0
         else
             h->Fh[n_0] = h->K*powf(h->eta[n_0]-y[h->Xs_contact][n_0], h->p); // (Chaigne, Eq. 20)
+    }
+    void undamp()
+    {
+        // Restore the original damping coeffients
+        this->b1 = this->_b1;
+        this->b2 = this->_b2;
+
+        // Recalculate the PDE coefficients
+        this->D = 1 + b1*this->h->Xs +2*b2/Ts;
+        this->a1 = (2 - 2*powf(r,2) + b2/Ts - 6*eps*powf(N,2)*powf(r,2))/D;
+        this->a2 = (-1 + b1*Ts + 2*b2/Ts)/D;
+        this->a3 = (powf(r,2) * (1+4*eps*powf(N,2)))/D;
+        this->a4 = (b2/Ts - eps*powf(N,2)*powf(r,2))/D;
+        this->a5 = (-b2/Ts)/D;
+
+        // Recalculate the bridge boundary coefficients
+        this->b_R1 = (2-2*powf(lambda,2)*mu-2*powf(lambda,2))/(1+b1*Ts+zeta_b*lambda);
+        this->b_R2 = (4*powf(lambda,2)*mu+2*powf(lambda,2))/(1+b1*Ts+zeta_b*lambda);
+        this->b_R3 = (-2*powf(lambda,2)*mu)/(1+b1*Ts+zeta_b*lambda);
+        this->b_R4 = (-1-b1*Ts+zeta_b*lambda)/(1+b1*Ts+zeta_b*lambda);
+        this->b_RF = (powf(Ts,2)/rho)/(1+b1*Ts+zeta_b*lambda);
+
+        this->b_L1 = (2-2*powf(lambda,2)*mu-2*powf(lambda,2))/(1+b1*Ts+zeta_l*lambda);
+        this->b_L2 = (4*powf(lambda,2)*mu+2*powf(lambda,2))/(1+b1*Ts+zeta_l*lambda);
+        this->b_L3 = (-2*powf(lambda,2)*mu)/(1+b1*Ts+zeta_l*lambda);
+        this->b_L4 = (-1-b1*Ts+zeta_l*lambda)/(1+b1*Ts+zeta_l*lambda);
+        this->b_LF = (powf(Ts,2)/rho)/(1+b1*Ts+zeta_l*lambda);
+    }
+    void damp()
+    {
+        // Crank up the damping coefficients
+        this->b1 = 0.2;
+        this->b2 = 6.25e-6;
+
+        // Recalculate the PDE coefficients
+        this->D = 1 + b1*this->h->Xs +2*b2/Ts;
+        this->a1 = (2 - 2*powf(r,2) + b2/Ts - 6*eps*powf(N,2)*powf(r,2))/D;
+        this->a2 = (-1 + b1*Ts + 2*b2/Ts)/D;
+        this->a3 = (powf(r,2) * (1+4*eps*powf(N,2)))/D;
+        this->a4 = (b2/Ts - eps*powf(N,2)*powf(r,2))/D;
+        this->a5 = (-b2/Ts)/D;
+
+        // Recalculate the bridge boundary coefficients
+        this->b_R1 = (2-2*powf(lambda,2)*mu-2*powf(lambda,2))/(1+b1*Ts+zeta_b*lambda);
+        this->b_R2 = (4*powf(lambda,2)*mu+2*powf(lambda,2))/(1+b1*Ts+zeta_b*lambda);
+        this->b_R3 = (-2*powf(lambda,2)*mu)/(1+b1*Ts+zeta_b*lambda);
+        this->b_R4 = (-1-b1*Ts+zeta_b*lambda)/(1+b1*Ts+zeta_b*lambda);
+        this->b_RF = (powf(Ts,2)/rho)/(1+b1*Ts+zeta_b*lambda);
+
+        this->b_L1 = (2-2*powf(lambda,2)*mu-2*powf(lambda,2))/(1+b1*Ts+zeta_l*lambda);
+        this->b_L2 = (4*powf(lambda,2)*mu+2*powf(lambda,2))/(1+b1*Ts+zeta_l*lambda);
+        this->b_L3 = (-2*powf(lambda,2)*mu)/(1+b1*Ts+zeta_l*lambda);
+        this->b_L4 = (-1-b1*Ts+zeta_l*lambda)/(1+b1*Ts+zeta_l*lambda);
+        this->b_LF = (powf(Ts,2)/rho)/(1+b1*Ts+zeta_l*lambda);
     }
     double get_next_sample()
     {
