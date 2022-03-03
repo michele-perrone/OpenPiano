@@ -43,6 +43,7 @@ private:
 
     juce::MidiKeyboardState keyboardState;
     juce::MidiKeyboardComponent midiKeyboard;
+    void init_keyboard();
 
     void handleNoteOn (juce::MidiKeyboardState*, int midiChannel, int midiNoteNumber, float velocity) override;
     void handleNoteOff (juce::MidiKeyboardState*, int midiChannel, int midiNoteNumber, float velocity) override;
