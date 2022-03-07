@@ -21,7 +21,7 @@ Open Piano is an attempt at recreating the characteristic sound of the piano wit
 A first binary release of Open Piano will be published once the project reaches a usable state.
 
 ## Building
-To build Open Piano, you will need CMake (version 3.15 or above), a C++ compiler (C++17 or above), and the latest version of the [JUCE](https://github.com/juce-framework/JUCE) library. Once you clone/download this repository, you need to clone/download a copy of JUCE inside the `OpenPianoJUCE/` folder. You end up with this directory structure:
+To build the Open Piano JUCE app/plugin, you will need CMake (version 3.15 or above), a C++ compiler (C++17 or above), and the latest version of the [JUCE](https://github.com/juce-framework/JUCE) library. Once you clone/download this repository, you need to clone/download a copy of JUCE inside the `OpenPianoJUCE/` folder. You end up with this directory structure:
 
 ```
 OpenPiano
@@ -44,7 +44,7 @@ Right now, Open Piano sounds like a strangely out of tune piano with no soundboa
 * [x] ~~Optimize the FD model to make it... usable~~ - Partially done [HERE](https://github.com/michele-perrone/OpenPiano/commit/eb89378566dbc875619000024de95a31c819be7c), but there's room for improvement
 * [x] ~~Take advantage of multithreading~~ - Semi-decent implementation [HERE](https://github.com/michele-perrone/OpenPiano/commit/c8868d6180c09d2e3bc9c06715db37fbe9c68205)
 * [x] ~~Add string dampers (normal people call it pedal)~~ - Rudimentary implementation [HERE](https://github.com/michele-perrone/OpenPiano/commit/79f3d8d2aae4c2b4e68de793d5fe940273fde638)
-* [ ] Find a mitigation for the fact that higher strings have a decreasingly lower spatial resolution, which makes it impossible to use the entire piano range with normal sampling frequencies
+* [ ] Find a mitigation for the fact that higher strings have a decreasingly lower spatial resolution, which makes it impossible to use the entire piano range with reasonable sampling frequencies
 * [ ] Simulate multiple strings per note and the double decay phenomenon
 * [ ] Simulate the soundboard
 * [ ] Find a decent set of physical parameters for all the strings
