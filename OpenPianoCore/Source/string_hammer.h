@@ -243,32 +243,12 @@ struct PianoString
         lambda = courant_num;
         mu = powf(eps,2)/(powf(c,2)*powf(this->h->Xs,2));
 
-        // PDE Coefficients (Chaigne's article)
-        this->D = 1 + b1*this->h->Xs +2*b2/Ts;
-        this->r = c*Ts/this->h->Xs;
-        this->a1 = (2 - 2*powf(r,2) + b2/Ts - 6*eps*powf(N,2)*powf(r,2))/D;
-        this->a2 = (-1 + b1*Ts + 2*b2/Ts)/D;
-        this->a3 = (powf(r,2) * (1+4*eps*powf(N,2)))/D;
-        this->a4 = (b2/Ts - eps*powf(N,2)*powf(r,2))/D;
-        this->a5 = (-b2/Ts)/D;
-
         // Boundary parameters
         this->zeta_b = 1e03; // Normalized impedance of the bridge
         this->zeta_l = 1e20; // Normalized impedance of the left boundary
 
-        // Bridge boundary coefficients (case m=0, m=1)
-        this->b_R1 = (2-2*powf(lambda,2)*mu-2*powf(lambda,2))/(1+b1*Ts+zeta_b*lambda);
-        this->b_R2 = (4*powf(lambda,2)*mu+2*powf(lambda,2))/(1+b1*Ts+zeta_b*lambda);
-        this->b_R3 = (-2*powf(lambda,2)*mu)/(1+b1*Ts+zeta_b*lambda);
-        this->b_R4 = (-1-b1*Ts+zeta_b*lambda)/(1+b1*Ts+zeta_b*lambda);
-        this->b_RF = (powf(Ts,2)/rho)/(1+b1*Ts+zeta_b*lambda);
-
-        // Left hand (hinged string end) boundary coefficients (case m = M-1, m=M)
-        this->b_L1 = (2-2*powf(lambda,2)*mu-2*powf(lambda,2))/(1+b1*Ts+zeta_l*lambda);
-        this->b_L2 = (4*powf(lambda,2)*mu+2*powf(lambda,2))/(1+b1*Ts+zeta_l*lambda);
-        this->b_L3 = (-2*powf(lambda,2)*mu)/(1+b1*Ts+zeta_l*lambda);
-        this->b_L4 = (-1-b1*Ts+zeta_l*lambda)/(1+b1*Ts+zeta_l*lambda);
-        this->b_LF = (powf(Ts,2)/rho)/(1+b1*Ts+zeta_l*lambda);
+        // Compute the coefficients for the FD scheme
+        compute_FD_coefficients();
 
         // Parameters for the spatio-temporal simulation scheme
         //this->n = -1; // [CONSIDER DEPRECATING] This counter will be incremented at every temporal step
@@ -371,26 +351,7 @@ struct PianoString
         this->b1 = this->_b1;
         this->b2 = this->_b2;
 
-        // Recalculate the PDE coefficients
-        this->D = 1 + b1*this->h->Xs +2*b2/Ts;
-        this->a1 = (2 - 2*powf(r,2) + b2/Ts - 6*eps*powf(N,2)*powf(r,2))/D;
-        this->a2 = (-1 + b1*Ts + 2*b2/Ts)/D;
-        this->a3 = (powf(r,2) * (1+4*eps*powf(N,2)))/D;
-        this->a4 = (b2/Ts - eps*powf(N,2)*powf(r,2))/D;
-        this->a5 = (-b2/Ts)/D;
-
-        // Recalculate the bridge boundary coefficients
-        this->b_R1 = (2-2*powf(lambda,2)*mu-2*powf(lambda,2))/(1+b1*Ts+zeta_b*lambda);
-        this->b_R2 = (4*powf(lambda,2)*mu+2*powf(lambda,2))/(1+b1*Ts+zeta_b*lambda);
-        this->b_R3 = (-2*powf(lambda,2)*mu)/(1+b1*Ts+zeta_b*lambda);
-        this->b_R4 = (-1-b1*Ts+zeta_b*lambda)/(1+b1*Ts+zeta_b*lambda);
-        this->b_RF = (powf(Ts,2)/rho)/(1+b1*Ts+zeta_b*lambda);
-
-        this->b_L1 = (2-2*powf(lambda,2)*mu-2*powf(lambda,2))/(1+b1*Ts+zeta_l*lambda);
-        this->b_L2 = (4*powf(lambda,2)*mu+2*powf(lambda,2))/(1+b1*Ts+zeta_l*lambda);
-        this->b_L3 = (-2*powf(lambda,2)*mu)/(1+b1*Ts+zeta_l*lambda);
-        this->b_L4 = (-1-b1*Ts+zeta_l*lambda)/(1+b1*Ts+zeta_l*lambda);
-        this->b_LF = (powf(Ts,2)/rho)/(1+b1*Ts+zeta_l*lambda);
+        compute_FD_coefficients();
     }
     void damp()
     {
@@ -398,27 +359,8 @@ struct PianoString
         this->b1 = 0.2;
         this->b2 = 6.25e-6;
 
-        // Recalculate the PDE coefficients
-        this->D = 1 + b1*this->h->Xs +2*b2/Ts;
-        this->a1 = (2 - 2*powf(r,2) + b2/Ts - 6*eps*powf(N,2)*powf(r,2))/D;
-        this->a2 = (-1 + b1*Ts + 2*b2/Ts)/D;
-        this->a3 = (powf(r,2) * (1+4*eps*powf(N,2)))/D;
-        this->a4 = (b2/Ts - eps*powf(N,2)*powf(r,2))/D;
-        this->a5 = (-b2/Ts)/D;
-
-        // Recalculate the bridge boundary coefficients
-        this->b_R1 = (2-2*powf(lambda,2)*mu-2*powf(lambda,2))/(1+b1*Ts+zeta_b*lambda);
-        this->b_R2 = (4*powf(lambda,2)*mu+2*powf(lambda,2))/(1+b1*Ts+zeta_b*lambda);
-        this->b_R3 = (-2*powf(lambda,2)*mu)/(1+b1*Ts+zeta_b*lambda);
-        this->b_R4 = (-1-b1*Ts+zeta_b*lambda)/(1+b1*Ts+zeta_b*lambda);
-        this->b_RF = (powf(Ts,2)/rho)/(1+b1*Ts+zeta_b*lambda);
-
-        this->b_L1 = (2-2*powf(lambda,2)*mu-2*powf(lambda,2))/(1+b1*Ts+zeta_l*lambda);
-        this->b_L2 = (4*powf(lambda,2)*mu+2*powf(lambda,2))/(1+b1*Ts+zeta_l*lambda);
-        this->b_L3 = (-2*powf(lambda,2)*mu)/(1+b1*Ts+zeta_l*lambda);
-        this->b_L4 = (-1-b1*Ts+zeta_l*lambda)/(1+b1*Ts+zeta_l*lambda);
-        this->b_LF = (powf(Ts,2)/rho)/(1+b1*Ts+zeta_l*lambda);
-    }
+        compute_FD_coefficients();
+    }    
     double get_next_sample()
     {
         // Save us a lot of time when the displacement is negligible.
@@ -496,6 +438,38 @@ struct PianoString
         {
             buffer[i] = gain*this->get_next_sample();
         }
+    }
+    void compute_FD_coefficients()
+    {
+        double r_sqr, N_sqr;
+        double lambda_sqr, Ts_sqr;
+
+        // PDE coefficients (Chaigne's article)
+        r_sqr = r*r;
+        N_sqr = N*N;
+        this->D = 1 + b1*this->h->Xs +2*b2/Ts;
+        this->r = c*Ts/this->h->Xs;
+        this->a1 = (2 - 2*r_sqr + b2/Ts - 6*eps*N_sqr*r_sqr)/D;
+        this->a2 = (-1 + b1*Ts + 2*b2/Ts)/D;
+        this->a3 = (r_sqr * (1+4*eps*N_sqr))/D;
+        this->a4 = (b2/Ts - eps*N_sqr*r_sqr)/D;
+        this->a5 = (-b2/Ts)/D;
+
+        // Right hand (bridge string end) boundary coefficients (case m=0, m=1)
+        lambda_sqr = lambda*lambda;
+        Ts_sqr = Ts*Ts;
+        this->b_R1 = (2-2*lambda_sqr*mu-2*lambda_sqr)/(1+b1*Ts+zeta_b*lambda);
+        this->b_R2 = (4*lambda_sqr*mu+2*lambda_sqr)/(1+b1*Ts+zeta_b*lambda);
+        this->b_R3 = (-2*lambda_sqr*mu)/(1+b1*Ts+zeta_b*lambda);
+        this->b_R4 = (-1-b1*Ts+zeta_b*lambda)/(1+b1*Ts+zeta_b*lambda);
+        this->b_RF = (Ts_sqr/rho)/(1+b1*Ts+zeta_b*lambda);
+
+        // Left hand (hinged string end) boundary coefficients (case m = M-1, m=M)
+        this->b_L1 = (2-2*lambda_sqr*mu-2*lambda_sqr)/(1+b1*Ts+zeta_l*lambda);
+        this->b_L2 = (4*lambda_sqr*mu+2*lambda_sqr)/(1+b1*Ts+zeta_l*lambda);
+        this->b_L3 = (-2*lambda_sqr*mu)/(1+b1*Ts+zeta_l*lambda);
+        this->b_L4 = (-1-b1*Ts+zeta_l*lambda)/(1+b1*Ts+zeta_l*lambda);
+        this->b_LF = (Ts_sqr/rho)/(1+b1*Ts+zeta_l*lambda);
     }
     static drwav_uint64 save_to_wav(char* filename, float* sound, uint64_t duration_samples, bool normalize_output, bool destroy)
     {
