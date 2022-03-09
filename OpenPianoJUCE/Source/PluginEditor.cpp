@@ -48,17 +48,16 @@ void OpenPianoAudioProcessorEditor::resized()
     // subcomponents in your editor..
     juce::Grid grid;
 
-        using Track = juce::Grid::TrackInfo;
-        grid.templateRows = { Track(1_fr) };
-        grid.templateColumns = { Track(1_fr) };
+    using Track = juce::Grid::TrackInfo;
+    grid.templateRows = { Track(1_fr) };
+    grid.templateColumns = { Track(1_fr) };
 
-        midiKeyboard.setKeyWidth(getLocalBounds().getWidth()/(float)N_WHITE_KEYS);
-        grid.items =
-        {
-            GridItem(midiKeyboard)
-        };
-        Rectangle localBounds = getLocalBounds();
-        grid.performLayout(localBounds);
+    midiKeyboard.setKeyWidth(getLocalBounds().getWidth()/(float)N_WHITE_KEYS);
+    grid.items =
+    {
+        GridItem(midiKeyboard)
+    };
+    grid.performLayout(getLocalBounds());
 }
 
 void OpenPianoAudioProcessorEditor::handleNoteOn (juce::MidiKeyboardState*, int midiChannel, int midiNoteNumber, float velocity)
