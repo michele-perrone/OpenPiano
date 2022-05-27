@@ -46,7 +46,8 @@ juce_add_plugin(OpenPiano
     PLUGIN_MANUFACTURER_CODE MiPe               # A four-character manufacturer id with at least one upper-case character
     PLUGIN_CODE Opmp                            # A unique four-character plugin id with exactly one upper-case character
                                                 # GarageBand 10.3 requires the first letter to be upper-case, and the remaining letters to be lower-case
-    FORMATS VST3 Standalone                  # The formats to build. Other valid formats are: AAX Unity VST AU AUv3
+    FORMATS VST3 LV2 Standalone                 # The formats to build. Other valid formats are: AAX Unity VST AU AUv3 LV2
+    LV2URI "http://github.com/michele-perrone/OpenPiano"  # Needed for LV2
     PRODUCT_NAME "Open Piano")        # The name of the final executable, which can differ from the target name
 
 # `juce_generate_juce_header` will create a JuceHeader.h for a given target, which will be generated
