@@ -75,6 +75,14 @@ target_sources(OpenPiano
         Source/PluginEditor.h
         Source/PluginEditor.cpp)
 
+# `target_include_directories` specifies include directories to use when compiling a given target.
+# In our case, it is not mandatory, but it saves us the pain of having to write something like
+# `#include ../OpenPianoCore/Source/piano.h`. It can be simply replaced with `#include piano.h`.
+
+target_include_directories(OpenPiano
+    PRIVATE
+        ../OpenPianoCore/Source)
+
 # `target_compile_definitions` adds some preprocessor definitions to our target. In a Projucer
 # project, these might be passed in the 'Preprocessor Definitions' field. JUCE modules also make use
 # of compile definitions to switch certain features on/off, so if there's a particular feature you
