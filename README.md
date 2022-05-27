@@ -1,6 +1,6 @@
 # Open Piano: an open source piano engine based on physical modeling
 
-![](Documentation/Images/openpiano_screenshot.png)
+![](Documentation/Images/openpiano_spectrogram_screenshot.png)
 
 ## Summary
 ### [1. What is Open Piano?](#what-is-open-piano)
