@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <JuceHeader.h>
 #include "../../OpenPianoCore/Source/piano.h"
+#include "SpectrogramComponent.h"
 
 
 
@@ -71,6 +72,9 @@ public:
     juce::MidiKeyboardState keyboardState;
     bool pedal_down_previous;
     bool pedal_down_current;
+
+    //==============================================================================
+    SpectrogramComponent spectrogramComponent;
 
 private:
     //==============================================================================

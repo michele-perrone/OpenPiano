@@ -26,7 +26,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /**
 */
 
-class OpenPianoAudioProcessorEditor  : public juce::AudioProcessorEditor, public juce::MidiKeyboardState::Listener
+class OpenPianoAudioProcessorEditor  :
+        public juce::AudioProcessorEditor,
+        public juce::MidiKeyboardState::Listener
 {
 public:
     OpenPianoAudioProcessorEditor (OpenPianoAudioProcessor&);
@@ -47,6 +49,8 @@ private:
 
     void handleNoteOn (juce::MidiKeyboardState*, int midiChannel, int midiNoteNumber, float velocity) override;
     void handleNoteOff (juce::MidiKeyboardState*, int midiChannel, int midiNoteNumber, float velocity) override;
+
+    SpectrogramComponent& spectrogramComponent;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OpenPianoAudioProcessorEditor)
 };

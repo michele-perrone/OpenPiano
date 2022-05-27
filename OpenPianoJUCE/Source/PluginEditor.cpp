@@ -22,14 +22,17 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 //==============================================================================
 OpenPianoAudioProcessorEditor::OpenPianoAudioProcessorEditor (OpenPianoAudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p), midiKeyboard (audioProcessor.keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard)
+    : AudioProcessorEditor (&p),
+      audioProcessor (p),
+      midiKeyboard (audioProcessor.keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard),
+      spectrogramComponent(p.spectrogramComponent)
 {
     init_keyboard();
     setResizable(true, true);
 
     int screen_width = Desktop::getInstance().getDisplays().getPrimaryDisplay()->userArea.getWidth();
     int screen_height = Desktop::getInstance().getDisplays().getPrimaryDisplay()->userArea.getHeight();
-    setSize (screen_height*3/4, screen_height/12);
+    setSize (screen_width*3/4, screen_height*5/6);
 }
 
 OpenPianoAudioProcessorEditor::~OpenPianoAudioProcessorEditor()
@@ -40,24 +43,39 @@ OpenPianoAudioProcessorEditor::~OpenPianoAudioProcessorEditor()
 //==============================================================================
 void OpenPianoAudioProcessorEditor::paint (juce::Graphics& g)
 {
+    g.fillAll (juce::Colours::black);
+    g.setOpacity (1.0f);
+
+    Rectangle<int> area(getLocalBounds());
+    Rectangle<int> area_spectrogram(area.removeFromTop(area.getHeight()*0.75));
+
+    // Signal the area where the spectrogram resides for being repainted...
+    // (maybe this could be optimized a bit if this->repaint were called only
+    //  after SpectrogramComponent::drawNextLineOfSpectrogram() had finished)
+    repaint(area_spectrogram);
+    // ... and draw the current spectrogram.
+    g.drawImage(spectrogramComponent.getSpectrogramImage(), area_spectrogram.toFloat());
 }
 
 void OpenPianoAudioProcessorEditor::resized()
 {
-    // This is generally where you'll want to lay out the positions of any
-    // subcomponents in your editor..
-    juce::Grid grid;
+    Rectangle<int> area(getLocalBounds());
+    int control_board_height = area.getHeight()*0.75;
+    int keyboard_height = area.getHeight()*0.25;
 
-    using Track = juce::Grid::TrackInfo;
-    grid.templateRows = { Track(1_fr) };
-    grid.templateColumns = { Track(1_fr) };
+    /*************************************************************************/
+    /****************************** Control Board ****************************/
+    /*************************************************************************/
+    // This area is currently used by the spectrogram component!
+    area.removeFromTop(control_board_height);
 
-    midiKeyboard.setKeyWidth(getLocalBounds().getWidth()/(float)N_WHITE_KEYS);
-    grid.items =
-    {
-        GridItem(midiKeyboard)
-    };
-    grid.performLayout(getLocalBounds());
+
+    /*************************************************************************/
+    /******************************** Keyboard *******************************/
+    /*************************************************************************/
+    Rectangle<int> area_keyboard(area.removeFromTop(keyboard_height));
+    midiKeyboard.setKeyWidth(area.getWidth()/(float)N_WHITE_KEYS);
+    midiKeyboard.setBounds(area_keyboard);
 }
 
 void OpenPianoAudioProcessorEditor::handleNoteOn (juce::MidiKeyboardState*, int midiChannel, int midiNoteNumber, float velocity)

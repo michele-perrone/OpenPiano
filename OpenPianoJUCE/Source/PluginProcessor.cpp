@@ -213,6 +213,9 @@ void OpenPianoAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     float* outputChannelData = buffer.getWritePointer(0);
     float gain = 150;
     piano->get_next_block_multithreaded(outputChannelData, samplesPerBlock, gain);
+
+    for(int i = 0; i < samplesPerBlock; i++)
+        spectrogramComponent.pushNextSampleIntoFifo(outputChannelData[i]);
 }
 
 //==============================================================================
