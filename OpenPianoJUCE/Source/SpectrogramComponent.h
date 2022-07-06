@@ -25,14 +25,26 @@
 class SpectrogramComponent : private juce::Timer
 {
 public:
-    SpectrogramComponent()
+    SpectrogramComponent(unsigned int sample_rate)
         : forwardFFT (fftOrder),
-          spectrogramImage (juce::Image::RGB, 512, 512, true)
+          spectrogramImage (juce::Image::RGB, 512, 512, true),
+          Fs(sample_rate)
     {
+        initFrequencies();
         startTimerHz(STFTRefreshRate);
     }
 
     //==============================================================================
+    void initFrequencies()
+    {
+        int max_freq = Fs/2;
+        FFT_frequencies[0] = 0;
+        for(int i = 1; i < 5; i++)
+        {
+            FFT_frequencies[i] = FFT_frequencies[i-1] + max_freq/4;
+        }
+    }
+
     void pushNextSampleIntoFifo (float sample) noexcept
     {
         // if the fifo contains enough data, set a flag to say
@@ -95,11 +107,13 @@ public:
 
     static constexpr auto fftOrder = 10;                // [1]
     static constexpr auto fftSize  = 1 << fftOrder;     // [2]
+    int FFT_frequencies[5];
 
 private:
     juce::dsp::FFT forwardFFT;                          // [3]
     juce::Image spectrogramImage;
 
+    unsigned int Fs;
     std::array<float, fftSize> fifo;                    // [4]
     std::array<float, fftSize * 2> fftData;             // [5]
     int fifoIndex = 0;                                  // [6]

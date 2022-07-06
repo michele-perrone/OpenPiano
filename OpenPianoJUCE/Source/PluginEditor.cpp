@@ -25,10 +25,14 @@ OpenPianoAudioProcessorEditor::OpenPianoAudioProcessorEditor (OpenPianoAudioProc
     : AudioProcessorEditor (&p),
       audioProcessor (p),
       midiKeyboard (audioProcessor.keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard),
-      spectrogramComponent(p.spectrogramComponent)
+      spectrogramComponent(p.spectrogramComponent),
+      harmonicRatioComponent(p.harmonicRatioComponent)
 {
+    init_control_board();
     init_keyboard();
     setResizable(true, true);
+
+    plotType = 0; // By default, plot the STFT
 
     int screen_width = Desktop::getInstance().getDisplays().getPrimaryDisplay()->userArea.getWidth();
     int screen_height = Desktop::getInstance().getDisplays().getPrimaryDisplay()->userArea.getHeight();
@@ -47,14 +51,42 @@ void OpenPianoAudioProcessorEditor::paint (juce::Graphics& g)
     g.setOpacity (1.0f);
 
     Rectangle<int> area(getLocalBounds());
-    Rectangle<int> area_spectrogram(area.removeFromTop(area.getHeight()*0.75));
+    Rectangle<int> area_plot(area.removeFromTop(area.getHeight()*0.75));
+    area_plot.removeFromTop(area_plot.getHeight()*0.11); // Buttons
 
-    // Signal the area where the spectrogram resides for being repainted...
+
+    // Signal the area where the plot resides for being repainted...
     // (maybe this could be optimized a bit if this->repaint were called only
     //  after SpectrogramComponent::drawNextLineOfSpectrogram() had finished)
-    repaint(area_spectrogram);
-    // ... and draw the current spectrogram.
-    g.drawImage(spectrogramComponent.getSpectrogramImage(), area_spectrogram.toFloat());
+    repaint(area_plot);
+
+    if(plotType == 0)
+    {
+        // Draw the text showing the frequencies
+//        int bottom = area_plot.getBottom();
+//        int height = area_plot.getHeight();
+//        int step = (height-bottom)/5;
+//        int coord = bottom;
+//        for(int i = 0; i < 5; i++)
+//        {
+//            std::cout << "coord: " << coord << std::endl;
+//            g.setColour(juce::Colours::white);
+//            g.drawSingleLineText(std::to_string(spectrogramComponent->FFT_frequencies[i]), 0, area_plot.getCentreY(), Justification::left);
+//            coord += step;
+//        }
+//        std::cout << "center: " << area_plot.getCentreY() << std::endl;
+
+        // Draw the STFT
+        g.drawImage(spectrogramComponent->getSpectrogramImage(), area_plot.toFloat());
+    }
+    else if(plotType == 1)
+    {
+        // Draw the text showing the harmonic ratio range (ticks)
+        // ...
+
+        // Draw the harmonic ratio range
+        g.drawImage(harmonicRatioComponent->getharmonicRatioImage(), area_plot.toFloat());
+    }
 }
 
 void OpenPianoAudioProcessorEditor::resized()
@@ -66,8 +98,11 @@ void OpenPianoAudioProcessorEditor::resized()
     /*************************************************************************/
     /****************************** Control Board ****************************/
     /*************************************************************************/
-    // This area is currently used by the spectrogram component!
-    area.removeFromTop(control_board_height);
+    // This area is currently used by the spectrogram/harmonic ratio component!
+    Rectangle<int> area_control_board(area.removeFromTop(control_board_height));
+    Rectangle<int> area_buttons(area_control_board.removeFromTop(area_control_board.getHeight()*0.1));
+    spectrogramButton.setBounds(area_buttons.removeFromTop(area_buttons.getHeight()*0.5));
+    harmonicRatioButton.setBounds(area_buttons);
 
 
     /*************************************************************************/
@@ -96,4 +131,19 @@ void OpenPianoAudioProcessorEditor::init_keyboard()
     addAndMakeVisible (midiKeyboard);
 
     keyboardState.addListener (this);
+}
+
+void OpenPianoAudioProcessorEditor::init_control_board()
+{
+    spectrogramButton.setClickingTogglesState(false);
+    spectrogramButton.setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::darkred);
+    spectrogramButton.setButtonText("Show STFT");
+    spectrogramButton.onClick = [this] { this->plotType = 0; };
+    addAndMakeVisible(spectrogramButton);
+
+    harmonicRatioButton.setClickingTogglesState(false);
+    harmonicRatioButton.setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::darkred);
+    harmonicRatioButton.setButtonText("Show harmonic ratio");
+    harmonicRatioButton.onClick = [this] { this->plotType = 1; };
+    addAndMakeVisible(harmonicRatioButton);
 }

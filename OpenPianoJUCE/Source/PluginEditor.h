@@ -47,10 +47,14 @@ private:
     juce::MidiKeyboardComponent midiKeyboard;
     void init_keyboard();
 
+    juce::TextButton spectrogramButton, harmonicRatioButton;
+    SpectrogramComponent* spectrogramComponent;
+    HarmonicRatioComponent* harmonicRatioComponent;
+    int plotType; // 0 -> STFT, 1 -> harmonic ratio
+    void init_control_board();
+
     void handleNoteOn (juce::MidiKeyboardState*, int midiChannel, int midiNoteNumber, float velocity) override;
     void handleNoteOff (juce::MidiKeyboardState*, int midiChannel, int midiNoteNumber, float velocity) override;
-
-    SpectrogramComponent& spectrogramComponent;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OpenPianoAudioProcessorEditor)
 };

@@ -110,6 +110,9 @@ void OpenPianoAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
 
     // Initialize the piano and the output buffer
     piano = new Piano(sampleRate, samplesPerBlock, std::thread::hardware_concurrency());
+
+    spectrogramComponent = new SpectrogramComponent(sampleRate);
+    harmonicRatioComponent = new HarmonicRatioComponent(sampleRate);
 }
 
 void OpenPianoAudioProcessor::releaseResources()
@@ -215,7 +218,10 @@ void OpenPianoAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     piano->get_next_block_multithreaded(outputChannelData, samplesPerBlock, gain);
 
     for(int i = 0; i < samplesPerBlock; i++)
-        spectrogramComponent.pushNextSampleIntoFifo(outputChannelData[i]);
+    {
+        spectrogramComponent->pushNextSampleIntoFifo(outputChannelData[i]);
+        harmonicRatioComponent->pushNextSampleIntoFifo(outputChannelData[i]);
+    }
 }
 
 //==============================================================================

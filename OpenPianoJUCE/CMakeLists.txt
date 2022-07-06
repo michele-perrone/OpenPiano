@@ -74,7 +74,8 @@ target_sources(OpenPiano
         Source/PluginProcessor.cpp
         Source/PluginEditor.h
         Source/PluginEditor.cpp
-        Source/SpectrogramComponent.h)
+        Source/SpectrogramComponent.h
+        Source/HarmonicRatioComponent.h)
 
 # `target_compile_definitions` adds some preprocessor definitions to our target. In a Projucer
 # project, these might be passed in the 'Preprocessor Definitions' field. JUCE modules also make use

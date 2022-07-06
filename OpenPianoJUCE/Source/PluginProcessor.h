@@ -22,6 +22,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <JuceHeader.h>
 #include "../../OpenPianoCore/Source/piano.h"
 #include "SpectrogramComponent.h"
+#include "HarmonicRatioComponent.h"
 
 
 
@@ -74,7 +75,8 @@ public:
     bool pedal_down_current;
 
     //==============================================================================
-    SpectrogramComponent spectrogramComponent;
+    SpectrogramComponent* spectrogramComponent;
+    HarmonicRatioComponent* harmonicRatioComponent;
 
 private:
     //==============================================================================
