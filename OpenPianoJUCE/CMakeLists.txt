@@ -46,7 +46,8 @@ juce_add_plugin(OpenPiano
     PLUGIN_MANUFACTURER_CODE MiPe               # A four-character manufacturer id with at least one upper-case character
     PLUGIN_CODE Opmp                            # A unique four-character plugin id with exactly one upper-case character
                                                 # GarageBand 10.3 requires the first letter to be upper-case, and the remaining letters to be lower-case
-    FORMATS VST3 Standalone                  # The formats to build. Other valid formats are: AAX Unity VST AU AUv3
+    FORMATS VST3 LV2 Standalone                 # The formats to build. Other valid formats are: AAX Unity VST AU AUv3 LV2
+    LV2URI "http://github.com/michele-perrone/OpenPiano"  # Needed for LV2
     PRODUCT_NAME "Open Piano")        # The name of the final executable, which can differ from the target name
 
 # `juce_generate_juce_header` will create a JuceHeader.h for a given target, which will be generated
@@ -76,6 +77,14 @@ target_sources(OpenPiano
         Source/PluginEditor.cpp
         Source/SpectrogramComponent.h
         Source/HarmonicRatioComponent.h)
+
+# `target_include_directories` specifies include directories to use when compiling a given target.
+# In our case, it is not mandatory, but it saves us the pain of having to write something like
+# `#include ../OpenPianoCore/Source/piano.h`. It can be simply replaced with `#include piano.h`.
+
+target_include_directories(OpenPiano
+    PRIVATE
+        ../OpenPianoCore/Source)
 
 # `target_compile_definitions` adds some preprocessor definitions to our target. In a Projucer
 # project, these might be passed in the 'Preprocessor Definitions' field. JUCE modules also make use
