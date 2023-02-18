@@ -198,12 +198,16 @@ void OpenPianoAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
                 }
             }
         }
-        else if (message.isNoteOn())
+        else if (message.isNoteOn() &&
+                 message.getNoteNumber()-MIDI_NOTE_OFFSET >= 0 &&
+                 message.getNoteNumber()-MIDI_NOTE_OFFSET < N_STRINGS)
         {
             piano->strings[message.getNoteNumber()-MIDI_NOTE_OFFSET]->hit(message.getVelocity()/30.0);
         }
         // Strings are damped only if pedal is not down
-        else if (message.isNoteOff() && !pedal_down_current)
+        else if (message.isNoteOff() && !pedal_down_current &&
+                 message.getNoteNumber()-MIDI_NOTE_OFFSET >= 0 &&
+                 message.getNoteNumber()-MIDI_NOTE_OFFSET < N_STRINGS)
         {
             piano->strings[message.getNoteNumber()-MIDI_NOTE_OFFSET]->damp();
         }
