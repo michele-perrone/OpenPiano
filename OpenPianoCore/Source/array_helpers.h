@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #ifndef ARRAY_HELPERS_H
 #define ARRAY_HELPERS_H
 
+#include <cstdint>
 #endif // ARRAY_HELPERS_H
 
 /* ******************************************************************************** *
@@ -38,11 +39,11 @@ extern "C" {
 #include <math.h>
 #include <stdio.h>
 
-double* zeros1D(int size);
-double** zeros2D(int rows, int columns);
-double* hanning(int length);
-double mean(double **array, int dim, int idx, int start, int stop);
-double mean_abs(double** array, int dim, int idx, int start, int stop);
+double* zeros1D(uint32_t size);
+double** zeros2D(uint32_t rows, uint32_t columns);
+double* hanning(uint32_t length);
+double mean(double **array, uint32_t dim, uint32_t idx, uint32_t start, uint32_t stop);
+double mean_abs(double** array, uint32_t dim, uint32_t idx, uint32_t start, uint32_t stop);
 void print1D(double* array, int size);
 void normalize(float *array, int size);
 void mix(float *dest, float *array_1, float *array_2, int size);

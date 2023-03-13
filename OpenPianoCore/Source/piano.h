@@ -57,9 +57,9 @@ struct Piano
     PianoString* strings[N_STRINGS];
 
     int sample_rate;
-    size_t samples_per_block;
+    uint32_t samples_per_block;
 
-    size_t N_THREADS; // How many threads should we start
+    uint32_t N_THREADS; // How many threads should we start
     std::thread** threads; // Array that stores the pointers to the active threads
     float** buffers; // Array of audio buffers, one for each thread, with length "samples_per_block"
     std::atomic<bool>* thr_running; // Array that contains one flag for each thread.
@@ -73,9 +73,9 @@ struct Piano
                                         // n_running_threads == N_THREADS -> all threads are working
     std::atomic<uint32_t> sleep_duration; // How often threads should wake up to check if the
                                           // next audio block has been requested
-    int* thr_note_range; // For each thread store the note range to compute (first and last note)
+    uint32_t* thr_note_range; // For each thread store the note range to compute (first and last note)
 
-    Piano(int sample_rate, int samples_per_block, int n_threads)
+    Piano(int sample_rate, uint32_t samples_per_block, uint32_t n_threads)
     {
         this->sample_rate = sample_rate;
         this->samples_per_block = samples_per_block;
@@ -102,7 +102,7 @@ struct Piano
     ~Piano()
     {
         // Delete the threads
-        for(int i = 0; i < N_THREADS; i++)
+        for(uint32_t i = 0; i < N_THREADS; i++)
         {
             // Stop the current audio block computation: set the "thr_waiting_for_block" flag to "true"
             // This is a precaution: typically, we don't exit the program in the middle of an audio block.
@@ -136,7 +136,7 @@ struct Piano
         }
 
         // Free the audio buffers
-        for(int i = 0; i < N_THREADS; i++)
+        for(uint32_t i = 0; i < N_THREADS; i++)
         {
             free(buffers[i]);
         }
@@ -150,7 +150,7 @@ struct Piano
         //  and to start with the new one.
 
         // Activate the threads
-        for(int idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
+        for(uint32_t idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
         {
             thr_waiting_for_block[idx_thread] = false;
         }
@@ -175,7 +175,7 @@ struct Piano
         for(int i = 0; i < samples_per_block; i++)
         {
             buffer[i] = 0;
-            for(int idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
+            for(uint32_t idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
             {
                 buffer[i] += gain*(buffers[idx_thread][i]);
             }
@@ -187,14 +187,14 @@ struct Piano
 
         // Flags that keep each thread running inside its infinite "while" loop
         thr_running = (std::atomic<bool>*)malloc(sizeof(std::atomic<bool>)*N_THREADS);
-        for(int idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
+        for(uint32_t idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
         {
             thr_running[idx_thread] = true;
         }
 
         // Flags used to signal to the thread that a new block has to be computed
         thr_waiting_for_block = (std::atomic<bool>*)malloc(sizeof(std::atomic<bool>)*N_THREADS);
-        for(int idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
+        for(uint32_t idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
         {
             thr_waiting_for_block[idx_thread] = true;
         }
@@ -203,17 +203,17 @@ struct Piano
         // TODO: to be more fair when assigning a group of notes to each thread, we could take into account that strings
         //  with lower fundamental frequencies require more computational power (they have more spatial samples)
         //  in order to distribute the computational load more evenly.
-        thr_note_range = (int*)malloc(sizeof(int)*N_THREADS*2); // thr_note_range[0] -> first note of thread 0
-                                                                    // thr_note_range[1] -> last note of thread 0
-                                                                    // thr_note_range[2] -> first note of thread 1
-                                                                    // thr_note_range[3] -> last note of thread 2
-                                                                    // ... and so on
-        int n_notes_per_thread = floor(N_STRINGS/N_THREADS); // If N_THREADS is not divisible by N_STRINGS, the
-                                                                // remainder will go to the last thread
-        for(int idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
+        thr_note_range = (uint32_t*)malloc(sizeof(uint32_t)*N_THREADS*2); // thr_note_range[0] -> first note of thread 0
+                                                                          // thr_note_range[1] -> last note of thread 0
+                                                                          // thr_note_range[2] -> first note of thread 1
+                                                                          // thr_note_range[3] -> last note of thread 2
+                                                                          // ... and so on
+        uint32_t n_notes_per_thread = floor(N_STRINGS/N_THREADS); // If N_THREADS is not divisible by N_STRINGS, the
+                                                                  // remainder will go to the last thread
+        for(uint32_t idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
         {
-            int start_note = idx_thread * n_notes_per_thread; // Start note for the current thread
-            int end_note = start_note + n_notes_per_thread-1; // End note for the current thread
+            uint32_t start_note = idx_thread * n_notes_per_thread; // Start note for the current thread
+            uint32_t end_note = start_note + n_notes_per_thread-1; // End note for the current thread
 
             thr_note_range[idx_thread*2] = start_note;
 
@@ -234,7 +234,7 @@ struct Piano
                                             //                divided by 10  --> 533 microseconds of sleep
                                             //                divided by 25  --> 213 microseconds of sleep
         threads = (std::thread**)malloc(sizeof(std::thread*)*N_THREADS);
-        for(int idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
+        for(uint32_t idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
         {
             threads[idx_thread] = new std::thread([=]
             {
@@ -250,7 +250,7 @@ struct Piano
                         for(size_t i = 0; i < samples_per_block; i++)
                         {
                             buffers[idx_thread][i] = 0.0f;
-                            for(int j = thr_note_range[idx_thread*2]; j <= thr_note_range[idx_thread*2+1]; j++)
+                            for(uint32_t j = thr_note_range[idx_thread*2]; j <= thr_note_range[idx_thread*2+1]; j++)
                             {
                                 buffers[idx_thread][i] += strings[j]->get_next_sample();
                             }
@@ -272,7 +272,7 @@ struct Piano
         }
 
         // Detach the threads
-        for(int idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
+        for(uint32_t idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
         {
             threads[idx_thread]->detach();
         }
@@ -281,15 +281,15 @@ struct Piano
     {
         // Allocate the buffers
         buffers = (float**)malloc(N_THREADS * sizeof(float*));
-        for(int idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
+        for(uint32_t idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
         {
             buffers[idx_thread] = (float*)malloc(this->samples_per_block * sizeof(float));
         }
 
         // Initialize the buffers to zeros.
         // This prevents from drilling people's ears when they change the buffer size in the plugin!
-        for (int idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
-            for (int i = 0; i < samples_per_block; i++)
+        for (uint32_t idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
+            for (uint32_t i = 0; i < samples_per_block; i++)
                 buffers[idx_thread][i] = 0;
     }
     float get_next_sample(float gain)

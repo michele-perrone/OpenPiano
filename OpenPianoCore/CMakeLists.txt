@@ -9,8 +9,8 @@ add_executable(OpenPianoCore
     Source/main.cpp
     Source/dr_wav.h
     Source/dr_wav.cpp
-    Source/array_helpers.h
     Source/array_helpers.cpp
+    Source/array_helpers.h    
     Source/string_hammer.h
     Source/piano.h
     )

@@ -54,7 +54,7 @@ struct Hammer
     // Central contact point btw string and hammer
     double a; // Normalized in the range (0,1]
     double x_contact; // In meters
-    int Xs_contact; // In samples
+    uint32_t Xs_contact; // In samples
     double Xs;
     int i;
 
@@ -99,9 +99,9 @@ struct Hammer
         i = 0;
         g = 0;
         hammer_win = nullptr;
-        hammer_mask = NULL;
-        eta = NULL;
-        Fh = NULL;
+        hammer_mask = nullptr;
+        eta = nullptr;
+        Fh = nullptr;
     }
     ~Hammer()
     {
@@ -180,7 +180,7 @@ struct PianoString
     double b_LF;
 
     // Parameters for spatio-temporal simulation scheme
-    int buffer_size; // 4 samples is the absolute minimum
+    uint32_t buffer_size; // 4 samples is the absolute minimum
     uint64_t n; // Sample counter for the string simulation
     uint8_t n_0;
     uint8_t n_1;
@@ -188,10 +188,10 @@ struct PianoString
     uint8_t n_3;    
 
     // Parameters for the calculation of the sound
-    int N_space_samples; // Must be even in order to be centered around something
-    int Xs_sound;
-    int left_boundary;
-    int right_boundary;       
+    uint32_t N_space_samples; // Must be even in order to be centered around something
+    uint32_t Xs_sound;
+    uint32_t left_boundary;
+    uint32_t right_boundary;
 
     // These are used for optimization
     bool is_active; // Whether the string displacement is negligible
@@ -284,7 +284,7 @@ struct PianoString
     }
     ~PianoString()
     {
-        for(int i = 0; i < len_x_axis+2; i++)
+        for(uint32_t i = 0; i < len_x_axis+2; i++)
         {
             free(y[i]);
         }
@@ -386,7 +386,7 @@ struct PianoString
 
         // 2. The string displacement  y(i,n)
         //   (spatial sampling loop, Chaigne, Eq. 10)
-        for (int i = 2; i< len_x_axis-3; i++)
+        for (uint32_t i = 2; i< len_x_axis-3; i++)
         {
             y[i][n_0] = a1*y[i][n_1] + a2*y[i][n_2]
                     + a3*(y[i+1][n_1] + y[i-1][n_1])
@@ -396,7 +396,7 @@ struct PianoString
         }
 
         // 3. (Simplified) Boundary conditions with perfect reflection (Chaigne, Eq. 23)
-        int end = len_x_axis+1;
+        uint32_t end = len_x_axis+1;
         y[0][n_0] = -y[2][n_0]; // a) Left boundary
         y[end][n_0] = -y[end-2][n_0]; // b) Bridge boundary
 
@@ -485,7 +485,7 @@ struct PianoString
         format.channels = 1;
         format.sampleRate = 48000;
         format.bitsPerSample = sizeof (float)*8;
-        drwav_init_file_write(&wav, filename, &format, NULL);
+        drwav_init_file_write(&wav, filename, &format, nullptr);
         drwav_uint64 framesWritten = drwav_write_pcm_frames(&wav, duration_samples, sound);
         drwav_uninit(&wav);
         if(destroy)

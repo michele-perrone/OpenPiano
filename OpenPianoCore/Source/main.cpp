@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <chrono>
 
-#include "dr_wav.h"
-#include "array_helpers.h"
+//#include "dr_wav.h"
+//#include "array_helpers.h"
 #include "piano.h"
 
 int main()

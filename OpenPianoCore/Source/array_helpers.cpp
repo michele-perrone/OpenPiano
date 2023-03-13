@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include "array_helpers.h"
+#include <cstdint>
 
 void normalize(float* array, int size)
 {
@@ -35,42 +36,42 @@ void normalize(float* array, int size)
     }
 }
 
-double* hanning(int length)
+double* hanning(uint32_t length)
 {
     double* output = (double*)malloc(sizeof (double) * length);
-    for (int i = 0; i < length; i++)
+    for (uint32_t i = 0; i < length; i++)
     {
         output[i] = 0.5 * (1 - cos(2*M_PI*i/(length-1)));
     }
     return output;
 }
 
-double** zeros2D(int rows, int columns)
+double** zeros2D(uint32_t rows, uint32_t columns)
 {
 
     double** output = (double**)malloc(rows * sizeof(double*));
-    for (int i = 0; i < rows; i++)
+    for (uint32_t i = 0; i < rows; i++)
         output[i] = (double*)malloc(columns * sizeof(double));
 
-    for (int i = 0; i < rows; i++)
-        for (int j = 0; j < columns; j++)
+    for (uint32_t i = 0; i < rows; i++)
+        for (uint32_t j = 0; j < columns; j++)
             output[i][j] = 0;
 
     return output;
 }
 
-double* zeros1D(int size)
+double* zeros1D(uint32_t size)
 {
 
     double* output = (double*)malloc(size * sizeof(double));
-    for (int i = 0; i < size; i++)
+    for (uint32_t i = 0; i < size; i++)
         output[i] = 0;
 
     return output;
 }
 
 
-double mean(double** array, int dim, int idx, int start, int stop)
+double mean(double** array, uint32_t dim, uint32_t idx, uint32_t start, uint32_t stop)
 {
     // This function computes the mean of a 2D array over a single dimension.
 
@@ -81,14 +82,14 @@ double mean(double** array, int dim, int idx, int start, int stop)
 
     if(dim == 0)
     {
-        for (int i = start; i < stop; i++)
+        for (uint32_t i = start; i < stop; i++)
         {
             sum += array[idx][i];
         }
     }
     else if(dim == 1)
     {
-        for (int i = start; i < stop; i++)
+        for (uint32_t i = start; i < stop; i++)
         {
             sum += array[i][idx];
         }
@@ -97,7 +98,7 @@ double mean(double** array, int dim, int idx, int start, int stop)
     return sum/(stop-start);
 }
 
-double mean_abs(double** array, int dim, int idx, int start, int stop)
+double mean_abs(double** array, uint32_t dim, uint32_t idx, uint32_t start, uint32_t stop)
 {
     // This function computes the mean of the absolute values of a 2D array
     // over a single dimension.
@@ -109,14 +110,14 @@ double mean_abs(double** array, int dim, int idx, int start, int stop)
 
     if(dim == 0)
     {
-        for (int i = start; i < stop; i++)
+        for (uint32_t i = start; i < stop; i++)
         {
             sum += fabs(array[idx][i]);
         }
     }
     else if(dim == 1)
     {
-        for (int i = start; i < stop; i++)
+        for (uint32_t i = start; i < stop; i++)
         {
             sum += fabs(array[i][idx]);
         }

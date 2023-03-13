@@ -1,10 +1,10 @@
 OpenPianoJUCE/CMakeLists.txt.user*
-OpenPianoJUCE/Builds/
+OpenPianoJUCE/Build/
 OpenPianoJUCE/JUCE/
 OpenPianoJUCE/.idea/
 
 OpenPianoCore/CMakeLists.txt.user*
-OpenPianoCore/Builds/
+OpenPianoCore/Build/
 OpenPianoCore/.idea/
 
 README.md.backup
