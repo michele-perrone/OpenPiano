@@ -192,10 +192,11 @@ void OpenPianoAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
             {
                 for (int i = 0; i < N_STRINGS; i++)
                 {
-                    // Damp only those strings which are not currently held down on the keyboard
-                    if(!keyboardState.isNoteOn(1, i+MIDI_NOTE_OFFSET))
+                     //Damp only those strings which are not currently held down on the keyboard
+                    if (!keyboardState.isNoteOn(1, i + MIDI_NOTE_OFFSET))
                         piano->strings[i]->damp();
                 }
+
             }
         }
         else if (message.isNoteOn() &&
@@ -204,6 +205,7 @@ void OpenPianoAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
         {
             piano->strings[message.getNoteNumber()-MIDI_NOTE_OFFSET]->hit(message.getVelocity()/30.0);
         }
+
         // Strings are damped only if pedal is not down
         else if (message.isNoteOff() && !pedal_down_current &&
                  message.getNoteNumber()-MIDI_NOTE_OFFSET >= 0 &&
@@ -212,7 +214,6 @@ void OpenPianoAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
             piano->strings[message.getNoteNumber()-MIDI_NOTE_OFFSET]->damp();
         }
     }
-
     int samplesPerBlock = buffer.getNumSamples();
     float* outputChannelData = buffer.getWritePointer(0);
     float gain = 150;

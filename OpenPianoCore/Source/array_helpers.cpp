@@ -84,14 +84,14 @@ double mean(double** array, uint32_t dim, uint32_t idx, uint32_t start, uint32_t
     {
         for (uint32_t i = start; i < stop; i++)
         {
-            sum += array[idx][i];
+            sum += array[i][idx];
         }
     }
     else if(dim == 1)
     {
         for (uint32_t i = start; i < stop; i++)
         {
-            sum += array[i][idx];
+            sum += array[idx][i];
         }
     }
 
@@ -112,14 +112,14 @@ double mean_abs(double** array, uint32_t dim, uint32_t idx, uint32_t start, uint
     {
         for (uint32_t i = start; i < stop; i++)
         {
-            sum += fabs(array[idx][i]);
+            sum += fabs(array[i][idx]);
         }
     }
     else if(dim == 1)
     {
         for (uint32_t i = start; i < stop; i++)
         {
-            sum += fabs(array[i][idx]);
+            sum += fabs(array[idx][i]);
         }
     }
 
