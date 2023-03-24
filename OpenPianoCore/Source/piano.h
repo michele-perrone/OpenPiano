@@ -28,6 +28,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <atomic>
 #include <mutex>
 #include <iostream>
+#include <chrono>
+#include <fstream>
+//
+////#include "dr_wav.h"
+////#include "array_helpers.h"
+//#include "piano.h"
+
 
 /* ***************************************************** *
  * The piano class contains all the strings and hammers. *
@@ -81,14 +88,14 @@ struct Piano
         // Initialize the audio buffers
         init_buffers();
 
-        // Initialize the threads
-        init_threads();
-
         // Initialize the hammers with their physical parameters
         init_hammers();
 
         // Initialize the strings with its physical parameters
         init_strings();
+
+        // Initialize the threads
+        init_threads();
     }
     ~Piano()
     {
@@ -369,5 +376,4 @@ struct Piano
         strings[C8] = new PianoString(sample_rate, 4186.01, 0.96, 0.0182, 0.0005, 9e7, 0.003, 6.25e-9, hammers[C8]);*/
     }
 };
-
 #endif // PIANO_H

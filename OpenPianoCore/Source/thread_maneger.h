@@ -1,11 +1,13 @@
 #pragma once
 #include <iostream>
+#include <fstream>
 
 #include <thread>
 #include <condition_variable>
 #include <barrier>
 #include <future>
 #include <atomic>
+#include <chrono>
 
 #include <functional>
 #include <vector>
@@ -21,6 +23,7 @@ template <typename Fn_type> class gates
 	Fn_type complete;
 	std::condition_variable c_v;
 	std::mutex thread_lock;
+	std::mutex loop_lock;
 public:
 	gates() : N_EXPECTED(0) {};
 	gates(int, Fn_type);
@@ -42,6 +45,7 @@ template <typename Fn_type> class OPTManeger
 	std::mutex finish_lock;
 	std::mutex start_lock;
 	std::condition_variable c_v;
+	std::condition_variable exit_cv;
 	gates<std::function<void()>>* sync_begin;
 	gates<std::function<void()>>* sync_finish;
 
@@ -60,9 +64,9 @@ template <typename Fn_type> class OPTManeger
 	void init();
 	void stop();
 
-
 	// public functions
 public:
+
 	OPTManeger(const int n_threads, const int n_data, Fn_type in_function);
 	//void run();
 	//void collect();

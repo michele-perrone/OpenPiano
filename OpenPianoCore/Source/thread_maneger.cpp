@@ -7,7 +7,7 @@ OPTManeger<Fn_type>::OPTManeger(const int n_threads, const int n_data, Fn_type i
 	data_idx(0),
 	threads(),
 	finish_lock(), start_lock(),
-	c_v(),
+	c_v(), exit_cv(),
 	start_promise(), start_future(),
 	processing_done(false), can_begin(false), stop_threading(false),
 	worker(in_fn)
@@ -22,8 +22,8 @@ void OPTManeger<Fn_type>::init()
 	std::function<void()> begin = [this]() mutable noexcept
 	{
 		std::unique_lock<std::mutex> u_lock(start_lock); // wait until main frees
-		c_v.wait(u_lock, [=]() ->bool {return can_begin || stop_threading; }); // check flags
-		data_idx = 0; // reset data "quee"
+		c_v.wait_for(u_lock, std::chrono::milliseconds(1), [=]() ->bool { return can_begin || stop_threading; }); // check flags
+		can_begin = false; // prevent from running immedeately again and give control to main
 	};
 
 	// sync before begining of computation and wait for main to signal start or stop
@@ -31,15 +31,15 @@ void OPTManeger<Fn_type>::init()
 
 	std::function<void()> complete = [this]() mutable noexcept
 	{
+
+		data_idx = 0; // reset data "quee"
 		processing_done = true; // set flags
-		can_begin = false; // prevent from running immedeately again and give control to main
-		c_v.notify_one(); // notify waiting main we're done
-		std::unique_lock u_lock(finish_lock); // block till main unlocks
+		exit_cv.notify_one(); // notify waiting main we're done
+		std::unique_lock<std::mutex> u_lock(finish_lock); // block till main unlocks
 	};
 
 	// sync after completing and wait to collect()
 	sync_finish = new gates<std::function<void()>>(N_THREADS, complete);
-
 
 	for (int i = 0; i < N_THREADS; i++)
 		threads.push_back(
@@ -52,14 +52,10 @@ void OPTManeger<Fn_type>::init()
 					while (true) // running loop
 					{
 						sync_begin->arrive_and_wait(); // wait to get signal to go again or stop
-						if (stop_threading) return; // as threads are synced none should get caught in sync_finish
-						while (true) // process loop
-						{
-							thread_data_idx = data_idx++; // std::atomic should provide all needed thread safety
-							if (thread_data_idx < N_DATA)
-								worker(i, thread_data_idx); // call worker to process data
-							else break;
-						} // process loop
+						if (stop_threading) return;
+						while ((thread_data_idx = data_idx++) < N_DATA) // process loop
+							worker(i, thread_data_idx); // call worker to process data
+							// std::atomic should provide all needed thread safety
 
 						sync_finish->arrive_and_wait(); // wait for all threads to come here and signal finish to main
 					} // running loop
@@ -77,13 +73,9 @@ void OPTManeger<Fn_type>::run_and_collect()
 	processing_done = false; // needs a reset here or it will race it
 	c_v.notify_one(); // signal start
 
-
-
-
-
 	// threads start
-	c_v.wait(u2_lock, [this] { return processing_done || stop_threading; });
-	u2_lock.unlock(); //  unlock completion
+	exit_cv.wait(u2_lock, [this] { return processing_done || stop_threading ; });
+	u2_lock.unlock();
 	c_v.notify_one();
 }
 template <typename Fn_type>
@@ -108,33 +100,26 @@ gates<Fn_type>::gates(int expected, Fn_type in_fn) :
 	N_EXPECTED(expected),
 	complete(in_fn),
 	completion_fn_done(false),
-	thread_lock()
+	thread_lock(), loop_lock()
 {}
 
 template <typename Fn_type>
 void gates<Fn_type>::arrive_and_wait()
 {
-	int now_count = ++arrived_count;
 
-	if (now_count == N_EXPECTED)
+	if (++arrived_count == N_EXPECTED)
 	{
 		complete();
-		arrived_count--;
 		completion_fn_done = true;
 		c_v.notify_all();
 	}
-	else if (now_count < N_EXPECTED)
+	else
 	{
 		std::unique_lock<std::mutex> u_lock(thread_lock);
 		c_v.wait(u_lock, [this]() ->bool {return completion_fn_done; });
-
-		if (--arrived_count <= 0)
-		{
-			arrived_count = 0; // case only one thread
-			completion_fn_done = false; // resetwith last thread
-		}
 	}
-
+	if (--arrived_count == 0)
+		completion_fn_done = false; // resetwith last thread
 }
 
 
