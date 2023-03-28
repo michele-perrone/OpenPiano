@@ -3,7 +3,6 @@
 template <typename Func_t>
 OPTManeger<Func_t>::OPTManeger(const int n_threads) :
 	N_THREADS(n_threads),
-	data_idx(0),
 	threads(),
 	callable_vec(),
 	data_lock(), read_lock(),
@@ -20,7 +19,6 @@ void OPTManeger<Func_t>::init()
 		[this]
 		{
 			read_lock.lock();
-			data_idx = 0;
 			run = false;
 			read_lock.unlock();
 		}
@@ -35,14 +33,18 @@ void OPTManeger<Func_t>::init()
 					int data_size;
 					while (true)
 					{
+						internal_idx = i;
 						std::unique_lock<std::mutex> u_lock(read_lock);
 						run_contition.wait(u_lock, [this]() -> bool { return run || stop; });
 						u_lock.unlock();
 						if (stop) return;
 
 						data_size = callable_vec.size();
-						while ((internal_idx = data_idx++) < data_size)
+						while (internal_idx < data_size)
+						{
 							callable_vec[internal_idx](i);
+							internal_idx += N_THREADS;
+						}
 
 						sync->arrive_and_wait();
 					}
@@ -78,7 +80,7 @@ inline void OPTManeger<Func_t>::stop_threading()
 	read_lock.unlock();
 	run_contition.notify_all();
 
-	for (auto& thread : threads)
+	for (std::thread& thread : threads)
 		if (thread.joinable()) thread.join();
 }
 template <typename Func_t>

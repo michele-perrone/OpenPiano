@@ -13,20 +13,25 @@
 
 template <typename Fn_type> class gates
 {
-	std::condition_variable gates_condition;
+
 	const int N_EXPECTED;
 	std::atomic<int> arrived_count;
+
+	std::condition_variable c_v;
+	std::condition_variable gates_condition;
+	std::mutex thread_lock;
+
 	bool completion_fn_done;
 	bool closed;
+
 	Fn_type complete;
-	std::condition_variable c_v;
-	std::mutex thread_lock;
+
 public:
-	void open() { closed = false; }
+	void arrive_and_wait();
 	void wait_for_exit();
+
 	gates() = delete;
 	gates(int, Fn_type);
-	void arrive_and_wait();
 };
 
 template <typename Func_t> 
@@ -45,10 +50,8 @@ class OPTManeger
 	gates<std::function<void()>>* sync;
 	
 	// helper variables
-	std::atomic<int> data_idx;
 	std::shared_mutex data_lock;
 	std::mutex read_lock;
-
 	std::condition_variable run_contition;
 	std::atomic<bool> run;
 	std::atomic<bool> stop;
