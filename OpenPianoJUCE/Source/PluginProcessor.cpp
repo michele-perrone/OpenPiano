@@ -192,20 +192,11 @@ void OpenPianoAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
             {
                 for (int i = 0; i < N_STRINGS; i++)
                 {
-                    // Damp only those strings which are not currently held down on the keyboard
+                     //Damp only those strings which are not currently held down on the keyboard
                     if (!keyboardState.isNoteOn(1, i + MIDI_NOTE_OFFSET))
-                        piano->thread_maneger->push_callable(
-                            std::bind(
-                                [i](PianoString** l_strings, int irrelevant)
-                                { l_strings[i]->damp(); },
-                                piano->strings,
-                                std::placeholders::_1
-                            )
-                        );
-                    // not sure about preformance benefit since this does not seem to be as heavy as get_next_sample
-                    // to me piano sounds a tiny bit different though it might be just placebo
+                        piano->strings[i]->damp();
                 }
-                piano->thread_maneger->run_and_collect();
+
             }
         }
         else if (message.isNoteOn() &&
@@ -214,6 +205,7 @@ void OpenPianoAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
         {
             piano->strings[message.getNoteNumber()-MIDI_NOTE_OFFSET]->hit(message.getVelocity()/30.0);
         }
+
         // Strings are damped only if pedal is not down
         else if (message.isNoteOff() && !pedal_down_current &&
                  message.getNoteNumber()-MIDI_NOTE_OFFSET >= 0 &&
@@ -222,7 +214,6 @@ void OpenPianoAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
             piano->strings[message.getNoteNumber()-MIDI_NOTE_OFFSET]->damp();
         }
     }
-
     int samplesPerBlock = buffer.getNumSamples();
     float* outputChannelData = buffer.getWritePointer(0);
     float gain = 150;
