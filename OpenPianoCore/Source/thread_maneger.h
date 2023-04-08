@@ -34,7 +34,6 @@ public:
 	gates(int, Fn_type);
 };
 
-template <typename Func_t> 
 class OPTManeger
 {
 	// prevent copy, assign, move
@@ -46,8 +45,9 @@ class OPTManeger
 	// base variables
 	const int N_THREADS;
 	std::vector<std::thread> threads;
-	std::vector<Func_t> callable_vec;
+	std::vector<std::function<void(int)>> callable_vec;
 	gates<std::function<void()>>* sync;
+	std::atomic<int> data_idx;
 	
 	// helper variables
 	std::shared_mutex data_lock;
@@ -56,19 +56,32 @@ class OPTManeger
 	std::atomic<bool> run;
 	std::atomic<bool> stop;
 
-	Func_t worker;
 
 	//init and stop could be made public
 	void init();
-	void stop_threading();
+
 
 	// public functions
 public:
-
+	void stop_threading();
 	OPTManeger(const int);
 	//void run();
 	//void collect();
-	void push_callable(Func_t);
+	//void set_callable(std::function<void(int, Params...)>&& callable);
+	template <typename F, typename... Params>
+	void push_callable(F&& callable, Params&&... args)
+	{
+		//data_lock.lock();
+		callable_vec.push_back(
+			std::bind(
+				std::move(callable),
+				std::placeholders::_1,
+				std::forward<Params>(args)...
+			)
+		);
+		//data_lock.unlock();
+	};
+
 	void run_and_collect();
 
 	// destructor

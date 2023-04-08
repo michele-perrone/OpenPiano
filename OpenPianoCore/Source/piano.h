@@ -22,7 +22,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "string_hammer.h"
 #include "thread_maneger.h"
-#include "thread_maneger.cpp"
+//#include "thread_maneger.cpp"
 #include <thread>
 #include <vector>
 #include <atomic>
@@ -72,10 +72,13 @@ struct Piano
     float** buffers; // Array of audio buffers, one for each thread, with length "samples_per_block"
 
     bool threaded;
-    OPTManeger<std::function<void(int)>>* thread_maneger;
+    std::mutex buffers_lock;
+    OPTManeger* thread_maneger;
+
 
     Piano(int sample_rate, uint32_t samples_per_block, uint32_t n_threads) :
-        thread_maneger(nullptr)
+        thread_maneger(nullptr),
+        buffers_lock()
     {
 
         this->sample_rate = sample_rate;
@@ -124,45 +127,35 @@ struct Piano
             for (int j = 0; j < samples_per_block; j++)
                 buffers[i][j] = 0.0f;
 
+        for (int i = 0; i < samples_per_block; i++)
+            buffer[i] = 0;
+
+
+
         for (int i = 0; i < N_STRINGS; i++)
             if (strings[i]->is_active)
-                thread_maneger->push_callable(
-                    std::bind(
-                        thread_callable,
-                        buffers,
-                        samples_per_block,
-                        strings,
-                        i,
-                        std::placeholders::_1
-                    )
+                thread_maneger->push_callable<std::function<void(int, int)>>(
+                    [this, samples_per_block](int thread_idx, int string)
+                    {
+                        // Compute the block
+                        for (size_t j = 0; j < samples_per_block; j++)
+                            buffers[thread_idx][j] += strings[string]->get_next_sample();
+                    }, 
+                    i
                 );
-        thread_maneger->run_and_collect();
 
+        thread_maneger->run_and_collect();
 
         // Each thread has its own buffer. At this point, all threads have written
         // its computed audio block into it.
         // Now we have to mix (sum) these blocks into the output buffer.
-        for(int i = 0; i < samples_per_block; i++)
-        {
-            buffer[i] = 0;
-            for(uint32_t idx_thread = 0; idx_thread < N_THREADS; idx_thread++)
-            {
-                buffer[i] += gain*(buffers[idx_thread][i]);
-            }
-        }
+        for (int i = 0; i < N_THREADS; i++)
+            for (int j = 0; j < samples_per_block; j++)
+                buffer[j] += gain * (buffers[i][j]);
     }
     void init_threads()
     {
-        thread_maneger = new OPTManeger<std::function<void(int)>>(N_THREADS);
-    }
-    static void thread_callable(float** buffers, int samples_per_block, PianoString** strings, int data_idx, int thread_idx)
-    {
-        // Compute the block
-        for (size_t j = 0; j < samples_per_block; j++)
-        {
-            //buffers[thread_idx][j] = 0.0f;
-            buffers[thread_idx][j] += strings[data_idx]->get_next_sample();
-        }
+        thread_maneger = new OPTManeger(N_THREADS);
     }
 
     void init_buffers()

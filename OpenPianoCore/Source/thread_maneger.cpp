@@ -1,24 +1,24 @@
 #include "thread_maneger.h"
 
-template <typename Func_t>
-OPTManeger<Func_t>::OPTManeger(const int n_threads) :
+OPTManeger::OPTManeger(const int n_threads) :
 	N_THREADS(n_threads),
 	threads(),
 	callable_vec(),
 	data_lock(), read_lock(),
 	run_contition(),
-	run(false), stop(false)
+	run(false), stop(false),
+	data_idx(0)
 {
 	init();
 }
-template <typename Func_t>
-void OPTManeger<Func_t>::init()
+void OPTManeger::init()
 {
 	sync = new gates<std::function<void()>>(
 		N_THREADS,
 		[this]
 		{
 			read_lock.lock();
+			data_idx = 0;
 			run = false;
 			read_lock.unlock();
 		}
@@ -27,24 +27,20 @@ void OPTManeger<Func_t>::init()
 	for (int i = 0; i < N_THREADS; i++)
 		threads.push_back(
 			std::thread(
-				[&, i, this]() mutable noexcept
+				[i, this]() mutable noexcept
 				{
 					int internal_idx;
 					int data_size;
 					while (true)
 					{
-						internal_idx = i;
 						std::unique_lock<std::mutex> u_lock(read_lock);
 						run_contition.wait(u_lock, [this]() -> bool { return run || stop; });
 						u_lock.unlock();
 						if (stop) return;
 
 						data_size = callable_vec.size();
-						while (internal_idx < data_size)
-						{
+						while ((internal_idx = data_idx++) < data_size)
 							callable_vec[internal_idx](i);
-							internal_idx += N_THREADS;
-						}
 
 						sync->arrive_and_wait();
 					}
@@ -52,15 +48,8 @@ void OPTManeger<Func_t>::init()
 			)
 		);
 }
-template <typename Func_t>
-void OPTManeger<Func_t>::push_callable(Func_t callable)
-{
-	// data_lock.lock();
-	callable_vec.push_back(callable);
-	// data_lock.unlock();
-}
-template <typename Func_t>
-void OPTManeger<Func_t>::run_and_collect()
+
+void OPTManeger::run_and_collect()
 {
 	read_lock.lock();
 	run = true;
@@ -68,12 +57,11 @@ void OPTManeger<Func_t>::run_and_collect()
 	run_contition.notify_all();
 
 	sync->wait_for_exit();
-	// data_lock.lock();
+	//data_lock.lock();
 	callable_vec.clear();
-	// data_lock.unlock();
+	//data_lock.unlock();
 }
-template<typename Func_t>
-inline void OPTManeger<Func_t>::stop_threading()
+ void OPTManeger::stop_threading()
 {
 	read_lock.lock();
 	stop = true;
@@ -83,12 +71,13 @@ inline void OPTManeger<Func_t>::stop_threading()
 	for (std::thread& thread : threads)
 		if (thread.joinable()) thread.join();
 }
-template <typename Func_t>
-OPTManeger<Func_t>::~OPTManeger()
+OPTManeger::~OPTManeger()
 {
 	stop_threading();
 	delete sync;
 }
+
+
 
 template <typename Fn_type>
 gates<Fn_type>::gates(int expected, Fn_type in_fn) :
