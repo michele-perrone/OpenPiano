@@ -34,7 +34,7 @@ int main()
     Piano piano(Fs, samples_per_block, n_threads);
 
     // Output sound init
-    uint32_t duration = 300; // Duration of the synthesized signal [s]
+    uint32_t duration = 30; // Duration of the synthesized signal [s]
     int duration_samples = duration*Fs;
     int n_blocks = floorf(duration_samples/samples_per_block);
     float* sound = (float*)malloc(duration_samples*sizeof (float));
@@ -50,7 +50,6 @@ int main()
     {
         piano.get_next_block_multithreaded(&sound[n*samples_per_block], samples_per_block, 1);
     }
-    while(piano.n_running_threads != 0) {}
     auto test_end = std::chrono::steady_clock::now();
 
     uint64_t test_2_get_next_block_multithreaded = std::chrono::duration_cast<std::chrono::milliseconds>(test_end-test_start).count();
@@ -100,13 +99,13 @@ int main()
 
     printf("****************** TEST RESULTS (milliseconds) ******************\n"
            "*************** Benchmark for %i seconds of sound ***************\n"
-           "get_next_block_multithreaded() (%i long blocks): %li\n"
-           "get_next_block(): %li\n"
-           "get_next_sample(): %li\n",
+           "get_next_block_multithreaded() (%i long blocks): %li ms\n"
+           "get_next_block() (%i long blocks): %li ms\n"
+           "get_next_sample() (%i samples): %li ms\n",
            duration,
            samples_per_block, test_2_get_next_block_multithreaded,
-           test_3_get_next_block,
-           test_4_get_next_sample
+           samples_per_block, test_3_get_next_block,
+           samples_per_block*Fs, test_4_get_next_sample
           );
 
 

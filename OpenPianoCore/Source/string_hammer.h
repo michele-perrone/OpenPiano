@@ -35,9 +35,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #endif
 #include <math.h>
 #include <inttypes.h>
+#include <array>
 
 #include "dr_wav.h"
 #include "array_helpers.h"
+
 
 struct Hammer
 {
@@ -185,7 +187,7 @@ struct PianoString
     uint8_t n_0;
     uint8_t n_1;
     uint8_t n_2;
-    uint8_t n_3;    
+    uint8_t n_3;
 
     // Parameters for the calculation of the sound
     uint32_t N_space_samples; // Must be even in order to be centered around something
@@ -196,13 +198,14 @@ struct PianoString
     // These are used for optimization
     bool is_active; // Whether the string displacement is negligible
     uint64_t is_active_check_ctr; // Counter for triggering the "check_if_active()" function
+    double reference_buffer[5];
 
     // Methods
-    PianoString(int Fs, double f0, double L, double rho, double S, double E, double b1, double b2, Hammer * h)
+    PianoString(int Fs, double f0, double L, double rho, double S, double E, double b1, double b2, Hammer* h)
     {
         // Sampling frequency and period
         this->Fs = Fs;
-        this->Ts = 1./Fs;
+        this->Ts = 1. / Fs;
 
         // Hammer hitting this string
         this->h = h;
@@ -217,31 +220,31 @@ struct PianoString
         this->_b2 = this->b2 = b2;
 
         // Calculate the remaining physical parameters
-        this->Ms = this->rho*this->L;
-        this->Te = this->rho*powf(this->L,2)*4*powf(this->f0,2);
-        this->c = sqrt(this->Te/this->rho);
-        this->r_gyr = this->S/2;
-        this->eps = powf(this->r_gyr,2) * ( (this->E*this->S) / (this->Te*powf(this->L,2)) );
+        this->Ms = this->rho * this->L;
+        this->Te = this->rho * powf(this->L, 2) * 4 * powf(this->f0, 2);
+        this->c = sqrt(this->Te / this->rho);
+        this->r_gyr = this->S / 2;
+        this->eps = powf(this->r_gyr, 2) * ((this->E * this->S) / (this->Te * powf(this->L, 2)));
 
         // Calculate the maximum number of spatial samples
-        this->gamma = Fs/(2*this->f0); // Eq. 12
-        this->N = floor( sqrt((-1+sqrt(1+16*eps*powf(gamma,2)))/(8*eps)) ); // Eq. 11
+        this->gamma = Fs / (2 * this->f0); // Eq. 12
+        this->N = floor(sqrt((-1 + sqrt(1 + 16 * eps * powf(gamma, 2))) / (8 * eps))); // Eq. 11
         this->len_x_axis = N;
 
         // Calculate the contact points on the string that are hit by the hammer
-        this->h->Xs = this->L/this->N;
-        this->h->x_contact = this->h->a*this->L;
-        this->h->Xs_contact = round(this->h->x_contact/this->h->Xs);
-        this->h->g = ceil(this->h->g_meters*this->N/this->L); //hammer_length in samples
+        this->h->Xs = this->L / this->N;
+        this->h->x_contact = this->h->a * this->L;
+        this->h->Xs_contact = round(this->h->x_contact / this->h->Xs);
+        this->h->g = ceil(this->h->g_meters * this->N / this->L); //hammer_length in samples
         this->h->hammer_win = hanning(this->h->g);
         this->h->hammer_mask = zeros1D(this->len_x_axis);
-        this->h->i = floorf(this->h->Xs_contact-(this->h->g/2)) + 1;
-        memcpy(&this->h->hammer_mask[this->h->i], &this->h->hammer_win[0], this->h->g*sizeof(double*));
+        this->h->i = floorf(this->h->Xs_contact - (this->h->g / 2)) + 1;
+        memcpy(&this->h->hammer_mask[this->h->i], &this->h->hammer_win[0], this->h->g * sizeof(double*));
 
         // FD parameters
-        courant_num = c*Ts/this->h->Xs;
+        courant_num = c * Ts / this->h->Xs;
         lambda = courant_num;
-        mu = powf(eps,2)/(powf(c,2)*powf(this->h->Xs,2));
+        mu = powf(eps, 2) / (powf(c, 2) * powf(this->h->Xs, 2));
 
         // Boundary parameters
         this->zeta_b = 1e03; // Normalized impedance of the bridge
@@ -268,15 +271,15 @@ struct PianoString
         this->n_3 = 0; // Previous time instant n-3
 
         // Array definition
-        this->y = zeros2D(len_x_axis+2, buffer_size);
+        this->y = zeros2D(buffer_size, len_x_axis + 2);
         this->h->eta = zeros1D(buffer_size); // Hammer displacement over time
         this->h->Fh = zeros1D(buffer_size); // Force imparted by the hammer on the string over time
 
         // Parameters for extrapolating the sound of the string
-        this->N_space_samples = std::min((uint32_t)13, ((N-1)|0x1)); // Must be even in order to be centered around something
+        this->N_space_samples = std::min((uint32_t)13, ((N - 1) | 0x1)); // Must be even in order to be centered around something
         this->Xs_sound = this->N - this->h->Xs_contact;
-        this->left_boundary = Xs_sound-(N_space_samples-1)/2;
-        this->right_boundary = Xs_sound+(N_space_samples-1)/2;
+        this->left_boundary = Xs_sound - (N_space_samples - 1) / 2;
+        this->right_boundary = Xs_sound + (N_space_samples - 1) / 2;
 
         // The string will become active when hit by the hammer
         this->is_active = false;
@@ -284,7 +287,7 @@ struct PianoString
     }
     ~PianoString()
     {
-        for(uint32_t i = 0; i < len_x_axis+2; i++)
+        for (uint32_t i = 0; i < buffer_size; i++)
         {
             free(y[i]);
         }
@@ -297,14 +300,14 @@ struct PianoString
         // over the four temporal steps contained in the buffer.
         double displacement_abs = 0.0;
 
-        displacement_abs += mean_abs(this->y, 1, n_0, 2, len_x_axis-3);
-        displacement_abs += mean_abs(this->y, 1, n_1, 2, len_x_axis-3);
-        displacement_abs += mean_abs(this->y, 1, n_2, 2, len_x_axis-3);
-        displacement_abs += mean_abs(this->y, 1, n_3, 2, len_x_axis-3);
+        displacement_abs += mean_abs(this->y, 1, n_0, 2, len_x_axis - 3);
+        displacement_abs += mean_abs(this->y, 1, n_1, 2, len_x_axis - 3);
+        displacement_abs += mean_abs(this->y, 1, n_2, 2, len_x_axis - 3);
+        displacement_abs += mean_abs(this->y, 1, n_3, 2, len_x_axis - 3);
 
         // The string is deemed "active" if the aforementioned sum is major
         // than 1 micrometer. This number is purely empirical.
-        if(displacement_abs > 0.000001)
+        if (displacement_abs > 0.000001)
         {
             this->is_active = true;
             return;
@@ -328,10 +331,10 @@ struct PianoString
         // A small trick: decrement the buffer indices by one unit.
         // This way, we don't have to calculate the string displacement inside this method,
         // which would be pointless, since we don't return samples from here.
-        n_3 = (n_3-1)&0x3;
-        n_2 = (n_2-1)&0x3;
-        n_1 = (n_1-1)&0x3;
-        n_0 = (n_0-1)&0x3;
+        n_3 = (n_3 - 1) & 0x3;
+        n_2 = (n_2 - 1) & 0x3;
+        n_1 = (n_1 - 1) & 0x3;
+        n_0 = (n_0 - 1) & 0x3;
 
         // Since we've just decremented the indices, the n_0 below will also correspond
         // to the n_0 seen by get_next_sample() when it will be computing the string displacement
@@ -340,10 +343,10 @@ struct PianoString
         h->eta[n_1] = 0;
         h->eta[n_0] = V_h0 * Ts;
 
-        if (h->eta[n_0] < y[h->Xs_contact][n_0]) // (Chaigne, Eq. 21)
+        if (h->eta[n_0] < y[n_0][h->Xs_contact]) // (Chaigne, Eq. 21)
             h->Fh[n_0] = 0.0f; // Hammer not in contact with string -> force is 0
         else
-            h->Fh[n_0] = h->K*powf(h->eta[n_0]-y[h->Xs_contact][n_0], h->p); // (Chaigne, Eq. 20)
+            h->Fh[n_0] = h->K * powf(h->eta[n_0] - y[n_0][h->Xs_contact], h->p); // (Chaigne, Eq. 20)
     }
     void undamp()
     {
@@ -360,18 +363,18 @@ struct PianoString
         this->b2 = 6.25e-6;
 
         compute_FD_coefficients();
-    }    
+    }
     double get_next_sample()
     {
         // Save us a lot of time when the displacement is negligible.
         // Do the check every 0x4000 samples (16384)
         is_active_check_ctr++;
-        if(is_active_check_ctr > 0x4000)
+        if (is_active_check_ctr > 0x4000)
         {
             is_active_check_ctr = 0;
             check_if_active();
         }
-        if(!is_active)
+        if (!is_active)
         {
             return 0;
         }
@@ -379,48 +382,75 @@ struct PianoString
         // Compute:
 
         // 1. The new buffer indices
-        n_3 = (n_3+1)&0x3; // Past time instant     n-3
-        n_2 = (n_2+1)&0x3; // Past time instant     n-2
-        n_1 = (n_1+1)&0x3; // Past time instant     n-1
-        n_0 = (n_0+1)&0x3; // Current time instant  n
+        n_3 = (n_3 + 1) & 0x3; // Past time instant     n-3
+        n_2 = (n_2 + 1) & 0x3; // Past time instant     n-2
+        n_1 = (n_1 + 1) & 0x3; // Past time instant     n-1
+        n_0 = (n_0 + 1) & 0x3; // Current time instant  n
 
         // 2. The string displacement  y(i,n)
         //   (spatial sampling loop, Chaigne, Eq. 10)
-        for (uint32_t i = 2; i< len_x_axis-3; i++)
-        {
-            y[i][n_0] = a1*y[i][n_1] + a2*y[i][n_2]
-                    + a3*(y[i+1][n_1] + y[i-1][n_1])
-                    + a4*(y[i+2][n_1] + y[i-2][n_1])
-                    + a5*(y[i+1][n_2] + y[i-1][n_2] + y[i][n_3])
-                    + (Ts*Ts*N*h->Fh[n_1]*h->hammer_mask[i])/Ms;
-        }
+
+        // together with y array indicies swapped for better caching
+        // constistently reduces total calc time for around 50% in release build
+        const double intermediate = (Ts * Ts * N * h->Fh[n_1]) / Ms;
+
+        double* const n0_ptr = y[n_0];
+        const double* const n1_ptr = y[n_1];
+        const double* const n2_ptr = y[n_2];
+        const double* const n3_ptr = y[n_3];
+        for (uint32_t i = 2; i < len_x_axis - 3; i++)
+            n0_ptr[i] =
+                  a4 * (n1_ptr[i - 2] + n1_ptr[i + 2])
+                + a3 * (n1_ptr[i - 1] + n1_ptr[i + 1])
+                + a1 * n1_ptr[i]
+                + a2 * n2_ptr[i]
+                + a5 * (n2_ptr[i - 1] + n2_ptr[i + 1] + n3_ptr[i])
+                + (intermediate  * h->hammer_mask[i]);
+
+        //for (uint32_t i = 2; i < len_x_axis - 3; i++)
+        //{
+        //    //for (int j = 0; j < 5; j++)
+        //    //    std::cout << reference_buffer[j] << std::endl
+        //    //    <<y[j][n_1] <<" j"<<std::endl;
+
+        //    y[i][n_0] = a1 * reference_buffer[2] + a2 * y[i][n_2]
+        //        + a3 * (reference_buffer[1] + reference_buffer[3])
+        //        + a4 * (reference_buffer[0] + reference_buffer[4])
+        //        + a5 * (y[i + 1][n_2] + y[i - 1][n_2] + y[i][n_3])
+        //        + (intermediate * h->hammer_mask[i]);
+
+        //    for (int i = 0; i < 5; i++)
+        //        reference_buffer[i] = y[i][n_1];
+        //}
+
+
 
         // 3. (Simplified) Boundary conditions with perfect reflection (Chaigne, Eq. 23)
-        uint32_t end = len_x_axis+1;
-        y[0][n_0] = -y[2][n_0]; // a) Left boundary
-        y[end][n_0] = -y[end-2][n_0]; // b) Bridge boundary
+        uint32_t end = len_x_axis + 1;
+        y[n_0][0] = -y[n_0][2]; // a) Left boundary
+        y[n_0][end] = -y[n_0][end - 2]; // b) Bridge boundary
 
-        // 3. Boundary conditions with agraffe and bridge impedances (Saitis, Eq. 4.18 and Eq. 4.20)
-        //   a) left boundary (frame) // 4.20
-        //y[0][n] = b_L1*y[0][n-1] + b_L2*y[1][n-1] + b_L3*y[2][n-1]
-        //    + b_L4*y[0][n-2] + b_LF*h->Fh[n-1]*h->hammer_mask[i];
-        //   b) right boundary (bridge) // Eq. 4.18
+        // //3. Boundary conditions with agraffe and bridge impedances (Saitis, Eq. 4.18 and Eq. 4.20)
+        //   //a) left boundary (frame) // 4.20
+        //y[n][0] = b_L1 * y[n - 1][0] + b_L2 * y[n - 1][1] + b_L3 * y[n - 1][2]
+        //    + b_L4*y[n-2][0] + b_LF * h->Fh[n - 1] * h->hammer_mask[i];
+        //   //b) right boundary (bridge) // Eq. 4.18
         //int end = len_x_axis;
-        //y[end][n] = b_R1*y[end][n-1] + b_R2*y[end-1][n-1]
-        //    + b_R3*y[end-2][n-1] + b_R4*y[end][n-2] + b_RF*h->Fh[n-1]*h->hammer_mask[i];        
+        //y[n][end] = b_R1 * y[n - 1][end] + b_R2 * y[n - 1][end - 1]
+        //    + b_R3*y[n-1][end - 2] + b_R4*y[n-2][end] + b_RF*h->Fh[n-1]*h->hammer_mask[i];
 
         // 4. The hammer displacement by taking into account its felt parameters (Saitis, Eq. 4.21)
-        h->eta[n_0] = h->d1*h->eta[n_1] + h->d2*h->eta[n_2] + h->dF*h->Fh[n_1];
+        h->eta[n_0] = h->d1 * h->eta[n_1] + h->d2 * h->eta[n_2] + h->dF * h->Fh[n_1];
 
         // 4. (Simplified) The hammer displacement (Chaigne, Eq. 19)
         //h->eta[n_0] = h->d1*h->eta[n_1] + h->d2*h->eta[n_2] - (powf(Ts,2.0f)*h->Fh[n_1])/h->Mh;
 
         // 5. The hammer force Fh(n)
         // if the condition in (Chaigne, Eq. 21) is met, the force term is removed
-        if (h->eta[n_0] < y[h->Xs_contact][n_0]) // (Chaigne, Eq. 21)
+        if (h->eta[n_0] < y[n_0][h->Xs_contact]) // (Chaigne, Eq. 21)
             h->Fh[n_0] = 0.0f; // Hammer not in contact with string -> force is 0
         else
-            h->Fh[n_0] = h->K*powf(h->eta[n_0]-y[h->Xs_contact][n_0], h->p); // (Chaigne, Eq. 20)
+            h->Fh[n_0] = h->K * powf(h->eta[n_0] - y[n_0][h->Xs_contact], h->p); // (Chaigne, Eq. 20)
 
         // 6. The current sound sample as the mean of a portion of string with specular position
         //    with respect to the central striking point of the hammer
@@ -432,11 +462,12 @@ struct PianoString
 
         return current_sample;
     }
+
     void get_next_block(float* buffer, size_t length, float gain)
     {
-        for(size_t i = 0; i < length; i++)
+        for (size_t i = 0; i < length; i++)
         {
-            buffer[i] = gain*this->get_next_sample();
+            buffer[i] = gain * this->get_next_sample();
         }
     }
     void compute_FD_coefficients()
@@ -445,35 +476,35 @@ struct PianoString
         double lambda_sqr, Ts_sqr;
 
         // PDE coefficients (Chaigne's article)
-        r_sqr = r*r;
-        N_sqr = N*N;
-        this->D = 1 + b1*this->h->Xs +2*b2/Ts;
-        this->r = c*Ts/this->h->Xs;
-        this->a1 = (2 - 2*r_sqr + b2/Ts - 6*eps*N_sqr*r_sqr)/D;
-        this->a2 = (-1 + b1*Ts + 2*b2/Ts)/D;
-        this->a3 = (r_sqr * (1+4*eps*N_sqr))/D;
-        this->a4 = (b2/Ts - eps*N_sqr*r_sqr)/D;
-        this->a5 = (-b2/Ts)/D;
+        r_sqr = r * r;
+        N_sqr = N * N;
+        this->D = 1 + b1 * this->h->Xs + 2 * b2 / Ts;
+        this->r = c * Ts / this->h->Xs;
+        this->a1 = (2 - 2 * r_sqr + b2 / Ts - 6 * eps * N_sqr * r_sqr) / D;
+        this->a2 = (-1 + b1 * Ts + 2 * b2 / Ts) / D;
+        this->a3 = (r_sqr * (1 + 4 * eps * N_sqr)) / D;
+        this->a4 = (b2 / Ts - eps * N_sqr * r_sqr) / D;
+        this->a5 = (-b2 / Ts) / D;
 
         // Right hand (bridge string end) boundary coefficients (case m=0, m=1)
-        lambda_sqr = lambda*lambda;
-        Ts_sqr = Ts*Ts;
-        this->b_R1 = (2-2*lambda_sqr*mu-2*lambda_sqr)/(1+b1*Ts+zeta_b*lambda);
-        this->b_R2 = (4*lambda_sqr*mu+2*lambda_sqr)/(1+b1*Ts+zeta_b*lambda);
-        this->b_R3 = (-2*lambda_sqr*mu)/(1+b1*Ts+zeta_b*lambda);
-        this->b_R4 = (-1-b1*Ts+zeta_b*lambda)/(1+b1*Ts+zeta_b*lambda);
-        this->b_RF = (Ts_sqr/rho)/(1+b1*Ts+zeta_b*lambda);
+        lambda_sqr = lambda * lambda;
+        Ts_sqr = Ts * Ts;
+        this->b_R1 = (2 - 2 * lambda_sqr * mu - 2 * lambda_sqr) / (1 + b1 * Ts + zeta_b * lambda);
+        this->b_R2 = (4 * lambda_sqr * mu + 2 * lambda_sqr) / (1 + b1 * Ts + zeta_b * lambda);
+        this->b_R3 = (-2 * lambda_sqr * mu) / (1 + b1 * Ts + zeta_b * lambda);
+        this->b_R4 = (-1 - b1 * Ts + zeta_b * lambda) / (1 + b1 * Ts + zeta_b * lambda);
+        this->b_RF = (Ts_sqr / rho) / (1 + b1 * Ts + zeta_b * lambda);
 
         // Left hand (hinged string end) boundary coefficients (case m = M-1, m=M)
-        this->b_L1 = (2-2*lambda_sqr*mu-2*lambda_sqr)/(1+b1*Ts+zeta_l*lambda);
-        this->b_L2 = (4*lambda_sqr*mu+2*lambda_sqr)/(1+b1*Ts+zeta_l*lambda);
-        this->b_L3 = (-2*lambda_sqr*mu)/(1+b1*Ts+zeta_l*lambda);
-        this->b_L4 = (-1-b1*Ts+zeta_l*lambda)/(1+b1*Ts+zeta_l*lambda);
-        this->b_LF = (Ts_sqr/rho)/(1+b1*Ts+zeta_l*lambda);
+        this->b_L1 = (2 - 2 * lambda_sqr * mu - 2 * lambda_sqr) / (1 + b1 * Ts + zeta_l * lambda);
+        this->b_L2 = (4 * lambda_sqr * mu + 2 * lambda_sqr) / (1 + b1 * Ts + zeta_l * lambda);
+        this->b_L3 = (-2 * lambda_sqr * mu) / (1 + b1 * Ts + zeta_l * lambda);
+        this->b_L4 = (-1 - b1 * Ts + zeta_l * lambda) / (1 + b1 * Ts + zeta_l * lambda);
+        this->b_LF = (Ts_sqr / rho) / (1 + b1 * Ts + zeta_l * lambda);
     }
     static drwav_uint64 save_to_wav(char* filename, float* sound, uint64_t duration_samples, bool normalize_output, bool destroy)
     {
-        if(normalize_output)
+        if (normalize_output)
         {
             normalize(sound, duration_samples);
         }
@@ -484,11 +515,11 @@ struct PianoString
         format.format = DR_WAVE_FORMAT_IEEE_FLOAT; // <-- Any of the DR_WAVE_FORMAT_* codes.
         format.channels = 1;
         format.sampleRate = 48000;
-        format.bitsPerSample = sizeof (float)*8;
+        format.bitsPerSample = sizeof(float) * 8;
         drwav_init_file_write(&wav, filename, &format, nullptr);
         drwav_uint64 framesWritten = drwav_write_pcm_frames(&wav, duration_samples, sound);
         drwav_uninit(&wav);
-        if(destroy)
+        if (destroy)
         {
             free(sound);
         }

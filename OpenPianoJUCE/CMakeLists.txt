@@ -71,6 +71,8 @@ target_sources(OpenPiano
         ../OpenPianoCore/Source/dr_wav.cpp
         ../OpenPianoCore/Source/piano.h
         ../OpenPianoCore/Source/string_hammer.h
+        ../OpenPianoCore/Source/thread_maneger.h
+        ../OpenPianoCore/Source/thread_maneger.cpp
         Source/PluginProcessor.h
         Source/PluginProcessor.cpp
         Source/PluginEditor.h
